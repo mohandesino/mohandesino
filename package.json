@@ -7,12 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node --env-file=.env server/server.js"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.2"
+    "react-router-dom": "^7.18.2",
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -24,5 +28,8 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
     "vite": "^8.2.0"
+  },
+  "allowScripts": {
+    "sqlite3@6.0.1": true
   }
 }

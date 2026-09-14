@@ -9,18 +9,23 @@ function Checkout() {
   const [paymentComplete, setPaymentComplete] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("mohandesino_courses");
-    if (saved) {
-      const all = JSON.parse(saved);
-      const found = all.find(c => c.id === id);
-      if (found) {
-        setCourse(found);
-      } else {
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/courses/${id}/full`);
+        const data = await response.json();
+
+        if (response.ok && data.success && data.course) {
+          setCourse(data.course);
+        } else {
+          navigate("/courses");
+        }
+      } catch (error) {
+        console.error("خطا در دریافت دوره:", error);
         navigate("/courses");
       }
-    } else {
-      navigate("/courses");
-    }
+    };
+
+    loadCourse();
   }, [id, navigate]);
 
   const handlePayment = () => {

@@ -10,26 +10,30 @@ function Course() {
   const [isPurchased, setIsPurchased] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("mohandesino_courses");
-    const savedMy = localStorage.getItem("mohandesino_my_courses");
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/courses/${id}/full`);
+        const data = await response.json();
 
-    if (saved) {
-      const allCourses = JSON.parse(saved);
-      const found = allCourses.find(c => c.id === id);
-      if (found) {
-        setCourse(found);
-      } else {
+        if (response.ok && data.success && data.course) {
+          setCourse(data.course);
+        } else {
+          navigate("/courses");
+        }
+      } catch (error) {
+        console.error("خطا در دریافت دوره:", error);
         navigate("/courses");
       }
-    } else {
-      navigate("/courses");
-    }
+    };
+
+    loadCourse();
+
+    const savedMy = localStorage.getItem("mohandesino_my_courses");
 
     if (savedMy) {
       const my = JSON.parse(savedMy);
       setMyCourses(my);
-      const purchased = my.some(c => c.id === id);
-      setIsPurchased(purchased);
+      setIsPurchased(my.some(c => String(c.id) === String(id)));
     }
   }, [id, navigate]);
 

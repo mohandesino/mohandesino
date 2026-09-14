@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 function Home() {
   const [courses, setCourses] = useState([]);
   const [settings, setSettings] = useState({
-    slogan: "مهندسی را کاربردی یاد بگیر",
-    aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده، مفهومی و کاربردی مباحث مهندسی است."
+    slogan: "ریاضی و فیزیک را ساده و مفهومی یاد بگیر",
+    aboutText: "آموزش‌هایی که به‌جای حفظ فرمول، کمک می‌کنند واقعاً مطلب را بفهمی.",
+    teacherTitle: "مدرس و تولیدکننده محتوای آموزشی مهندسینو"
   });
 
   useEffect(() => {
@@ -24,7 +25,7 @@ function Home() {
           price: 0,
           isFree: true,
           image: "",
-          description: "آموزش کامل مبحث توان و رادیکال از مفاهیم پایه تا حل مسائل پیشرفته دانشگاهی.",
+          description: "آموزش کامل مبحث توان و رادیکال از مفاهیم پایه تا حل مسائل پیشرفته.",
           chapters: []
         },
         {
@@ -40,13 +41,13 @@ function Home() {
         },
         {
           id: "3",
-          title: "Excel برای مهندسان و تحلیل‌گران داده",
-          category: "مهندسی صنایع",
-          level: "کاربردی",
+          title: "فیزیک پایه - مفاهیم و قوانین",
+          category: "فیزیک",
+          level: "مقدماتی",
           price: 0,
           isFree: true,
           image: "",
-          description: "آموزش کامل نرم‌افزار Excel با تمرکز بر کاربردهای مهندسی.",
+          description: "آموزش مفاهیم پایه فیزیک شامل حرکت، نیرو، انرژی و قوانین نیوتن.",
           chapters: []
         }
       ];
@@ -55,12 +56,14 @@ function Home() {
     }
 
     if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+      const data = JSON.parse(savedSettings);
+      setSettings(prev => ({ ...prev, ...data }));
     } else {
       const defaultSettings = {
-        slogan: "مهندسی را کاربردی یاد بگیر",
-        aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده، مفهومی و کاربردی مباحث مهندسی است.",
-        telegram: "https://t.me/mohandesino",
+        slogan: "ریاضی و فیزیک را ساده و مفهومی یاد بگیر",
+        aboutText: "آموزش‌هایی که به‌جای حفظ فرمول، کمک می‌کنند واقعاً مطلب را بفهمی.",
+        teacherTitle: "مدرس و تولیدکننده محتوای آموزشی مهندسینو",
+        telegram: "https://t.me/mohandesino2026",
         instagram: "https://instagram.com/mohandesino",
         email: "info@mohandesino.ir",
         phone: "۰۲۱-۱۲۳۴۵۶۷۸"
@@ -75,42 +78,50 @@ function Home() {
 
   return (
     <>
-      {/* HERO - با شعار قابل تغییر */}
+      {/* ===== HERO ===== */}
       <section className="home-hero">
         <div className="home-hero-inner">
           <div className="hero-content">
-            <span className="hero-badge">🔥 پلتفرم آموزش مهندسی</span>
+            <span className="hero-badge">
+              محمدرضا فاضلی‌نیا | {settings.teacherTitle || "مدرس و تولیدکننده محتوای آموزشی مهندسینو"}
+            </span>
             <h1>{settings.slogan}</h1>
             <p>{settings.aboutText}</p>
             <div className="hero-actions">
               <Link to="/courses" className="primary-btn">مشاهده دوره‌ها</Link>
-              <Link to="/#free-courses" className="secondary-btn">دوره‌های رایگان</Link>
+              <Link to="/courses" className="secondary-btn">دوره‌های رایگان</Link>
             </div>
           </div>
           <div className="hero-visual">
             <div className="hero-card">
               <div className="hero-icon">🎓</div>
-              <strong>مسیر یادگیری تو</strong>
+              <strong>یادگیری با مهندسینو</strong>
               <span>از صفر تا مهارت</span>
               <div className="hero-progress"><span></span></div>
-              <small>یادگیری را همین امروز شروع کن</small>
+              <small>همین امروز شروع کن</small>
             </div>
           </div>
         </div>
       </section>
 
-      {/* STATS */}
+      {/* ===== STATS ===== */}
       <section className="stats-section">
         <div className="stats-grid">
           <div className="stat-card"><strong>{courses.length}+</strong><span>دوره آموزشی</span></div>
-          <div className="stat-card"><strong>+100</strong><span>ساعت آموزش</span></div>
-          <div className="stat-card"><strong>+1000</strong><span>دانشجو</span></div>
-          <div className="stat-card"><strong>24/7</strong><span>دسترسی به آموزش</span></div>
+          <div className="stat-card"><strong>+۱۰۰</strong><span>ساعت آموزش</span></div>
+          <div className="stat-card"><strong>+۱۰۰۰</strong><span>دانشجو</span></div>
+          <div className="stat-card"><strong>۲۴/۷</strong><span>دسترسی به آموزش</span></div>
         </div>
       </section>
 
-      {/* FREE COURSES */}
-      <section className="page-container" id="free-courses">
+      {/* ===== CATEGORIES ===== */}
+      <section className="page-container">
+        <div className="section-title">
+        </div>
+      </section>
+
+      {/* ===== FREE COURSES ===== */}
+      <section className="page-container">
         <div className="section-title-row">
           <div className="section-title">
             <h2>🎁 دوره‌های رایگان</h2>
@@ -140,7 +151,7 @@ function Home() {
         </div>
       </section>
 
-      {/* PAID COURSES */}
+      {/* ===== PAID COURSES ===== */}
       <section className="page-container">
         <div className="section-title-row">
           <div className="section-title">
@@ -171,11 +182,27 @@ function Home() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ===== WHY US ===== */}
+      <section className="why-section">
+        <div className="page-container">
+          <div className="section-title">
+            <h2>چرا مهندسینو؟</h2>
+            <p>آموزش فقط حفظ کردن نیست؛ باید بتوانی از آن استفاده کنی.</p>
+          </div>
+          <div className="why-grid">
+            <div className="why-card"><span>🎯</span><h3>آموزش هدفمند</h3><p>هر دوره با یک مسیر مشخص و منظم طراحی می‌شود.</p></div>
+            <div className="why-card"><span>🧠</span><h3>یادگیری مفهومی</h3><p>مطالب ساده و قابل فهم توضیح داده می‌شوند.</p></div>
+            <div className="why-card"><span>🛠️</span><h3>کاملاً کاربردی</h3><p>تمرکز روی استفاده واقعی از مهارت‌هاست.</p></div>
+            <div className="why-card"><span>🚀</span><h3>مسیر پیشرفت</h3><p>از پایه شروع کن و قدم‌به‌قدم جلو برو.</p></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA ===== */}
       <section className="final-cta">
         <div>
           <h2>آماده‌ای یادگیری را شروع کنی؟</h2>
-          <p>اولین قدم مسیر مهندسی خودت را همین امروز بردار.</p>
+          <p>اولین قدم مسیر یادگیری خودت را همین امروز بردار.</p>
         </div>
         <Link to="/courses">مشاهده دوره‌ها</Link>
       </section>

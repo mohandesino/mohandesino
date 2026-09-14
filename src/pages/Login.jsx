@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 function Login() {
   const navigate = useNavigate();
@@ -8,16 +8,13 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ===== پاک کردن فرم هنگام بارگذاری صفحه =====
-  useEffect(() => {
-    setPhone("");
-    setPassword("");
-  }, []);
+  const normalizePhone = (value) => value.replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 1632));
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const normalizedPhone = normalizePhone(phone);
 
     if (!phone || !password) {
       setError("لطفاً همه فیلدها را پر کنید.");
@@ -27,7 +24,7 @@ function Login() {
 
     setTimeout(() => {
       const users = JSON.parse(localStorage.getItem("mohandesino_users") || "[]");
-      const foundUser = users.find(u => u.phone === phone);
+      const foundUser = users.find(u => normalizePhone(u.phone) === normalizedPhone);
 
       if (!foundUser) {
         setError("❌ این شماره ثبت‌نام نشده است. لطفاً ابتدا ثبت‌نام کنید.");
@@ -38,11 +35,19 @@ function Login() {
       const adminPhones = ["09927533272", "09051627714"];
       const user = {
         name: foundUser.name || "کاربر",
-        phone: phone,
-        isAdmin: adminPhones.includes(phone),
+        phone: normalizedPhone,
+        isAdmin: adminPhones.includes(normalizedPhone),
       };
 
       localStorage.setItem("mohandesino_user", JSON.stringify(user));
+      
+      // ===== پیام خوش‌آمدگویی به کاربر جدید =====
+      const isNewUser = !localStorage.getItem("mohandesino_welcome_shown");
+      if (isNewUser) {
+        alert("🎉 به مهندسینو خوش آمدی! اولین دوره‌ات رو همین حالا شروع کن.");
+        localStorage.setItem("mohandesino_welcome_shown", "true");
+      }
+
       setPhone("");
       setPassword("");
       setLoading(false);
@@ -59,37 +64,29 @@ function Login() {
   };
 
   return (
-    <main className="auth-page-modern" dir="rtl">
-      <div className="auth-wrapper">
-        <div className="auth-brand">
-          <div className="auth-brand-icon">🎓</div>
-          <h2>مهندسینو</h2>
-          <p>آموزش مهندسی، کاربردی و ساده</p>
-        </div>
-
-        <div className="auth-card-modern">
-          <div className="auth-card-header">
-            <div className="auth-card-icon">🔐</div>
-            <h1>خوش برگشتی</h1>
+    <main className="auth-page" dir="rtl">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="auth-icon">🔐</div>
+            <h1>خوش برگشتی 👋</h1>
             <p>برای ورود، شماره موبایل و رمز عبور خود را وارد کن</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form-modern" autoComplete="off">
-            <div className="auth-input-group">
+          <form onSubmit={handleSubmit} className="auth-form" autoComplete="off">
+            <div className="auth-field">
               <label>📱 شماره موبایل</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                placeholder="مثلاً ۰۹۱۲۳۴۵۶۷۸۹"
                 required
                 autoComplete="off"
-                name="phone_field"
-                id="phone_field"
               />
             </div>
 
-            <div className="auth-input-group">
+            <div className="auth-field">
               <label>🔑 رمز عبور</label>
               <input
                 type="password"
@@ -97,26 +94,24 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="رمز عبور خود را وارد کنید"
                 required
-                autoComplete="new-password"
-                name="password_field"
-                id="password_field"
+                autoComplete="off"
               />
             </div>
 
-            {error && <div className="auth-error-box">{error}</div>}
+            {error && <p className="auth-error">{error}</p>}
 
-            <div className="auth-extra">
-              <label className="auth-remember">
+            <div className="auth-options">
+              <label className="auth-checkbox">
                 <input type="checkbox" />
                 <span>مرا به خاطر بسپار</span>
               </label>
-              <Link to="/forgot-password" className="auth-forgot-link">فراموشی رمز؟</Link>
+              <Link to="/forgot-password" className="auth-forgot">فراموشی رمز؟</Link>
             </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
+            <button type="submit" className="auth-button" disabled={loading}>
               {loading ? (
                 <>
-                  <span className="auth-spinner"></span>
+                  <span className="spinner-small"></span>
                   در حال ورود...
                 </>
               ) : (
@@ -125,12 +120,12 @@ function Login() {
             </button>
           </form>
 
-          <div className="auth-divider-line">
+          <div className="auth-divider">
             <span>یا</span>
           </div>
 
-          <div className="auth-footer-text">
-            <p>حساب کاربری نداری؟ <Link to="/signup" className="auth-footer-link">ثبت‌نام کن</Link></p>
+          <div className="auth-footer">
+            <p>حساب کاربری نداری؟ <Link to="/signup" className="auth-link">ثبت‌نام کن</Link></p>
           </div>
         </div>
       </div>

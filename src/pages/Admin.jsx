@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import AdminBlog from "./AdminBlog";
 
-const ADMIN_PASSWORD = "M12.12.1385m#";
-
 const emptyCourse = {
   id: "",
   title: "",
@@ -32,42 +30,130 @@ function Admin() {
   const [lessonFree, setLessonFree] = useState(false);
 
   const [activeChapter, setActiveChapter] = useState(null);
+  const [editingChapterId, setEditingChapterId] = useState(null);
+  const [editingChapterTitle, setEditingChapterTitle] = useState("");
+
+  const [editingLessonId, setEditingLessonId] = useState(null);
+  const [editingLessonTitle, setEditingLessonTitle] = useState("");
+  const [editingLessonVideo, setEditingLessonVideo] = useState("");
+  const [editingLessonFree, setEditingLessonFree] = useState(false);
+const [editingLessonDuration, setEditingLessonDuration] = useState("");
+const [editingLessonDescription, setEditingLessonDescription] = useState("");
+const [editingLessonSortOrder, setEditingLessonSortOrder] = useState(1);
+
+const [lessonDuration, setLessonDuration] = useState("");
+const [lessonDescription, setLessonDescription] = useState("");
+const [lessonSortOrder, setLessonSortOrder] = useState(1);
 
   const [settings, setSettings] = useState({
-    slogan: "مهندسی را کاربردی یاد بگیر",
-    aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده، مفهومی و کاربردی مباحث مهندسی است.",
-    telegram: "https://t.me/mohandesino",
+    slogan: "ریاضی و فیزیک را ساده و مفهومی یاد بگیر",
+    aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده و مفهومی است.",
+    teacherTitle: "مدرس و تولیدکننده محتوای آموزشی مهندسینو", // ===== جدید
+    telegram: "https://t.me/mohandesino2026",
     instagram: "https://instagram.com/mohandesino",
     email: "info@mohandesino.ir",
-    phone: "۰۲۱-۱۲۳۴۵۶۷۸"
+    phone: "۰۲۱-۱۲۳۴۵۶۷۸",
+    address: "",
+    showFaq: true,
   });
 
   // ===== مدیریت دسته‌بندی‌ها =====
-  const [categories, setCategories] = useState(["ریاضی", "برق", "برنامه‌نویسی", "مهندسی صنایع", "سایر"]);
+  const [categories, setCategories] = useState(["ریاضی", "فیزیک"]);
   const [newCategory, setNewCategory] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const userData = JSON.parse(localStorage.getItem("mohandesino_user") || '{}');
-    const adminPhones = ["09927533272", "09051627714"];
-    const isAdmin = adminPhones.includes(userData.phone);
+    setError("");
 
-    if (password === ADMIN_PASSWORD && isAdmin) {
+    const userData = JSON.parse(
+      localStorage.getItem("mohandesino_user") || "{}"
+    );
+
+    if (!userData.phone) {
+      setError("ابتدا وارد حساب کاربری شوید.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:3000/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: userData.phone,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.message || "شماره موبایل یا رمز عبور اشتباه است");
+        return;
+      }
+
+      localStorage.setItem("mohandesino_admin_token", data.token);
       setIsLoggedIn(true);
-      setError("");
-    } else if (password !== ADMIN_PASSWORD) {
-      setError("رمز عبور اشتباه است!");
-    } else {
-      setError("شما دسترسی به پنل مدیریت ندارید!");
+      setPassword("");
+    } catch (err) {
+      setError("ارتباط با سرور برقرار نشد.");
     }
   };
 
+  const adminFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("mohandesino_admin_token");
+
+    const headers = {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("mohandesino_admin_token");
+      setIsLoggedIn(false);
+      setError("نشست مدیریت منقضی یا نامعتبر است. دوباره وارد شوید.");
+    }
+
+    return response;
+  };
+
   useEffect(() => {
-    const saved = localStorage.getItem("mohandesino_courses");
-    if (saved) setCourses(JSON.parse(saved));
+    fetch("http://localhost:3000/api/courses")
+      .then(res => res.json())
+      .then(async data => {
+        const list = data.courses || [];
+        const full = await Promise.all(list.map(async item => {
+          const res = await fetch(`http://localhost:3000/api/courses/${item.id}/full`);
+          const data = await res.json();
+          return data.course || item;
+        }));
+        setCourses(full.map(item => ({
+          ...item,
+          isFree: Boolean(item.is_free),
+          chapters: (item.chapters || []).map(ch => ({
+            ...ch,
+            lessons: (ch.lessons || []).map(l => ({
+              ...l,
+              free: Boolean(l.free)
+            }))
+          }))
+        })));
+      })
+      .catch(() => setCourses([]));
 
     const savedSettings = localStorage.getItem("mohandesino_settings");
-    if (savedSettings) setSettings(JSON.parse(savedSettings));
+    if (savedSettings) {
+      const data = JSON.parse(savedSettings);
+      setSettings(prev => ({ ...prev, ...data }));
+    } else {
+      localStorage.setItem("mohandesino_settings", JSON.stringify(settings));
+    }
 
     const savedCategories = localStorage.getItem("mohandesino_categories");
     if (savedCategories) {
@@ -96,13 +182,13 @@ function Admin() {
     const { name, value, type, checked } = e.target;
     setCourse(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : (name === "price" ? Number(value) : value)
+      [name]: type === "checkbox" ? checked : (name === "price" ? value : value)
     }));
   };
 
   const startNewCourse = () => {
     setEditingId(null);
-    setCourse({ ...emptyCourse, id: Date.now().toString() });
+    setCourse({ ...emptyCourse, id: "" });
     setChapterTitle("");
     setLessonTitle("");
     setLessonVideo("");
@@ -122,75 +208,341 @@ function Admin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const deleteCourse = (id) => {
+  const deleteCourse = async (id) => {
     if (!window.confirm("آیا از حذف این دوره مطمئن هستید؟")) return;
-    const updated = courses.filter(item => item.id !== id);
-    saveCourses(updated);
-    if (editingId === id) { setEditingId(null); setCourse(emptyCourse); }
+
+    try {
+      const response = await adminFetch(`http://localhost:3000/api/courses/${id}`, {
+        method: "DELETE"
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "خطا در حذف دوره");
+      }
+
+      setCourses(prev => prev.filter(item => item.id !== id));
+
+      if (editingId === id) {
+        setEditingId(null);
+        setCourse(emptyCourse);
+      }
+
+      alert("✅ دوره با موفقیت حذف شد.");
+    } catch (error) {
+      alert("❌ خطا در حذف دوره: " + error.message);
+    }
   };
 
-  const addChapter = () => {
+  const addChapter = async () => {
     if (!chapterTitle.trim()) { alert("عنوان فصل را وارد کنید."); return; }
-    const newChapter = { id: Date.now().toString(), title: chapterTitle.trim(), lessons: [] };
-    setCourse(prev => ({ ...prev, chapters: [...(prev.chapters || []), newChapter] }));
-    setChapterTitle("");
+    if (!course.id) { alert("اول دوره را ذخیره کنید، سپس فصل اضافه کنید."); return; }
+
+    try {
+      const response = await adminFetch("http://localhost:3000/api/chapters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course_id: course.id,
+          title: chapterTitle.trim(),
+          sort_order: (course.chapters?.length || 0) + 1
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در افزودن فصل");
+
+      const newChapter = {
+        id: data.id,
+        course_id: course.id,
+        title: chapterTitle.trim(),
+        sort_order: (course.chapters?.length || 0) + 1,
+        lessons: []
+      };
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: [...(prev.chapters || []), newChapter]
+      }));
+
+      setChapterTitle("");
+      alert("✅ فصل با موفقیت اضافه شد.");
+    } catch (error) {
+      alert("❌ خطا در افزودن فصل: " + error.message);
+    }
   };
 
-  const deleteChapter = (chapterId) => {
-    setCourse(prev => ({
-      ...prev,
-      chapters: prev.chapters.filter(ch => ch.id !== chapterId)
-    }));
-    if (activeChapter === chapterId) setActiveChapter(null);
+  const editChapter = (chapter) => {
+    setEditingChapterId(chapter.id);
+    setEditingChapterTitle(chapter.title);
   };
 
-  const addLesson = () => {
+  const saveChapterEdit = async (chapterId) => {
+    if (!editingChapterTitle.trim()) {
+      alert("عنوان فصل را وارد کنید.");
+      return;
+    }
+
+    try {
+      const response = await adminFetch(`http://localhost:3000/api/chapters/${chapterId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editingChapterTitle.trim()
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در ویرایش فصل");
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: prev.chapters.map(ch =>
+          ch.id === chapterId
+            ? { ...ch, title: editingChapterTitle.trim() }
+            : ch
+        )
+      }));
+
+      setEditingChapterId(null);
+      setEditingChapterTitle("");
+      alert("✅ فصل با موفقیت ویرایش شد.");
+    } catch (error) {
+      alert("❌ خطا در ویرایش فصل: " + error.message);
+    }
+  };
+
+  const deleteChapter = async (chapterId) => {
+    if (!window.confirm("آیا از حذف این فصل و درس‌های آن مطمئن هستید؟")) return;
+
+    try {
+      const response = await adminFetch(`http://localhost:3000/api/chapters/${chapterId}`, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در حذف فصل");
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: prev.chapters.filter(ch => ch.id !== chapterId)
+      }));
+
+      if (activeChapter === chapterId) setActiveChapter(null);
+      alert("✅ فصل با موفقیت حذف شد.");
+    } catch (error) {
+      alert("❌ خطا در حذف فصل: " + error.message);
+    }
+  };
+
+  const addLesson = async () => {
     if (!activeChapter) { alert("اول یک فصل را انتخاب کنید."); return; }
     if (!lessonTitle.trim()) { alert("عنوان درس را وارد کنید."); return; }
-    const newLesson = {
-      id: Date.now().toString(),
-      title: lessonTitle.trim(),
-      video: lessonVideo.trim(),
-      free: lessonFree,
-      duration: "",
-      description: ""
-    };
-    setCourse(prev => ({
-      ...prev,
-      chapters: prev.chapters.map(ch =>
-        ch.id === activeChapter
-          ? { ...ch, lessons: [...(ch.lessons || []), newLesson] }
-          : ch
-      )
-    }));
-    setLessonTitle("");
-    setLessonVideo("");
-    setLessonFree(false);
+
+    try {
+      const chapter = course.chapters?.find(ch => ch.id === activeChapter);
+      if (!chapter) { alert("فصل پیدا نشد."); return; }
+
+      const response = await adminFetch("http://localhost:3000/api/lessons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chapter_id: chapter.id,
+          title: lessonTitle.trim(),
+          video: lessonVideo.trim(),
+          free: lessonFree ? 1 : 0,
+          duration: lessonDuration.trim(),
+          description: lessonDescription.trim(),
+          sort_order: Number(lessonSortOrder) || (chapter.lessons?.length || 0) + 1
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در افزودن درس");
+
+      const newLesson = {
+        id: data.id,
+        chapter_id: chapter.id,
+        title: lessonTitle.trim(),
+        video: lessonVideo.trim(),
+        free: lessonFree,
+        duration: lessonDuration.trim(),
+        description: lessonDescription.trim(),
+        sort_order: Number(lessonSortOrder) || (chapter.lessons?.length || 0) + 1
+      };
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: prev.chapters.map(ch =>
+          ch.id === activeChapter
+            ? { ...ch, lessons: [...(ch.lessons || []), newLesson] }
+            : ch
+        )
+      }));
+
+      setLessonTitle("");
+      setLessonVideo("");
+      setLessonDuration("");
+      setLessonDescription("");
+      setLessonSortOrder((chapter.lessons?.length || 0) + 2);
+      setLessonFree(false);
+      alert("✅ درس با موفقیت اضافه شد.");
+    } catch (error) {
+      alert("❌ خطا در افزودن درس: " + error.message);
+    }
   };
 
-  const deleteLesson = (chapterId, lessonId) => {
-    setCourse(prev => ({
-      ...prev,
-      chapters: prev.chapters.map(ch =>
-        ch.id === chapterId
-          ? { ...ch, lessons: ch.lessons.filter(l => l.id !== lessonId) }
-          : ch
-      )
-    }));
+  const editLesson = (lesson) => {
+    setEditingLessonId(lesson.id);
+    setEditingLessonTitle(lesson.title || "");
+    setEditingLessonVideo(lesson.video || "");
+    setEditingLessonFree(Boolean(lesson.free));
   };
 
-  const saveCourse = () => {
+  const saveLessonEdit = async (chapterId, lessonId) => {
+    if (!editingLessonTitle.trim()) {
+      alert("عنوان درس را وارد کنید.");
+      return;
+    }
+
+    try {
+      const response = await adminFetch(`http://localhost:3000/api/lessons/${lessonId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editingLessonTitle.trim(),
+          video: editingLessonVideo.trim(),
+          free: editingLessonFree ? 1 : 0
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در ویرایش درس");
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: prev.chapters.map(ch =>
+          ch.id === chapterId
+            ? {
+                ...ch,
+                lessons: ch.lessons.map(lesson =>
+                  lesson.id === lessonId
+                    ? {
+                        ...lesson,
+                        title: editingLessonTitle.trim(),
+                        video: editingLessonVideo.trim(),
+                        free: editingLessonFree
+                      }
+                    : lesson
+                )
+              }
+            : ch
+        )
+      }));
+
+      setEditingLessonId(null);
+      setEditingLessonTitle("");
+      setEditingLessonVideo("");
+      setEditingLessonFree(false);
+
+      alert("✅ درس با موفقیت ویرایش شد.");
+    } catch (error) {
+      alert("❌ خطا در ویرایش درس: " + error.message);
+    }
+  };
+
+  const deleteLesson = async (chapterId, lessonId) => {
+    if (!window.confirm("آیا از حذف این درس مطمئن هستید؟")) return;
+
+    try {
+      const response = await adminFetch(`http://localhost:3000/api/lessons/${lessonId}`, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "خطا در حذف درس");
+
+      setCourse(prev => ({
+        ...prev,
+        chapters: prev.chapters.map(ch =>
+          ch.id === chapterId
+            ? { ...ch, lessons: ch.lessons.filter(l => l.id !== lessonId) }
+            : ch
+        )
+      }));
+
+      alert("✅ درس با موفقیت حذف شد.");
+    } catch (error) {
+      alert("❌ خطا در حذف درس: " + error.message);
+    }
+  };
+
+  const saveCourse = async () => {
     if (!course.title.trim()) { alert("عنوان دوره را وارد کنید."); return; }
     if (!course.description.trim()) { alert("توضیحات دوره را وارد کنید."); return; }
-    const finalCourse = { ...course, id: course.id || Date.now().toString() };
-    const exists = courses.some(item => item.id === finalCourse.id);
-    const updatedCourses = exists
-      ? courses.map(item => item.id === finalCourse.id ? finalCourse : item)
-      : [...courses, finalCourse];
-    saveCourses(updatedCourses);
-    setCourse(finalCourse);
-    setEditingId(finalCourse.id);
-    alert(exists ? "✅ دوره با موفقیت ویرایش شد." : "✅ دوره با موفقیت اضافه شد.");
+
+    try {
+      const payload = {
+        title: course.title,
+        category: course.category,
+        level: course.level,
+        price: course.isFree ? 0 : Number(course.price || 0),
+        is_free: course.isFree ? 1 : 0,
+        image: course.image || "",
+        description: course.description
+      };
+
+      let courseId = course.id;
+
+      if (courseId) {
+        const response = await adminFetch(`http://localhost:3000/api/courses/${courseId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error("خطا در ویرایش دوره");
+      } else {
+        const response = await adminFetch("http://localhost:3000/api/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "خطا در ایجاد دوره");
+        courseId = data.id;
+      }
+
+      const fullResponse = await fetch(`http://localhost:3000/api/courses/${courseId}/full`);
+      const fullData = await fullResponse.json();
+
+      setCourse({
+        ...course,
+        ...fullData.course,
+        id: courseId,
+        isFree: Boolean(fullData.course?.is_free),
+        chapters: fullData.course?.chapters || []
+      });
+
+      const listResponse = await fetch("http://localhost:3000/api/courses");
+      const listData = await listResponse.json();
+      const fullCourses = await Promise.all((listData.courses || []).map(async item => {
+        const r = await fetch(`http://localhost:3000/api/courses/${item.id}/full`);
+        const d = await r.json();
+        return {
+          ...d.course,
+          isFree: Boolean(d.course?.is_free),
+          chapters: (d.course?.chapters || []).map(ch => ({
+            ...ch,
+            lessons: (ch.lessons || []).map(l => ({ ...l, free: Boolean(l.free) }))
+          }))
+        };
+      }));
+      setCourses(fullCourses);
+      setEditingId(courseId);
+
+      alert(course.id ? "✅ دوره با موفقیت ویرایش شد." : "✅ دوره با موفقیت اضافه شد.");
+    } catch (error) {
+      alert("❌ خطا در ذخیره دوره: " + error.message);
+    }
   };
 
   const filteredCourses = courses.filter(item =>
@@ -263,6 +615,18 @@ function Admin() {
               <label>متن درباره ما</label>
               <textarea name="aboutText" value={settings.aboutText} onChange={handleSettingChange} rows="3" placeholder="متن درباره ما..." />
             </div>
+
+            {/* ===== جدید: فیلد عنوان مدرس ===== */}
+            <div className="admin-field-full">
+              <label>عنوان مدرس (زیر شعار)</label>
+              <input 
+                name="teacherTitle" 
+                value={settings.teacherTitle || ""} 
+                onChange={handleSettingChange} 
+                placeholder="مثلاً: مدرس و تولیدکننده محتوای آموزشی مهندسینو" 
+              />
+            </div>
+
             <div className="admin-field-half">
               <label>تلگرام</label>
               <input name="telegram" value={settings.telegram} onChange={handleSettingChange} placeholder="https://t.me/..." />
@@ -278,6 +642,23 @@ function Admin() {
             <div className="admin-field-half">
               <label>تلفن</label>
               <input name="phone" value={settings.phone} onChange={handleSettingChange} placeholder="۰۲۱-..." />
+            </div>
+
+            {/* ===== نمایش/مخفی کردن FAQ ===== */}
+            <div className="admin-field-half">
+              <label>نمایش سوالات متداول در منو</label>
+              <select
+                name="showFaq"
+                value={settings.showFaq !== false ? "yes" : "no"}
+                onChange={(e) => {
+                  const value = e.target.value === "yes";
+                  setSettings(prev => ({ ...prev, showFaq: value }));
+                }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+              >
+                <option value="yes">✅ نمایش داده شود</option>
+                <option value="no">❌ نمایش داده نشود</option>
+              </select>
             </div>
           </div>
           <button className="admin-save-btn" onClick={() => saveSettings(settings)} type="button">
@@ -393,7 +774,7 @@ function Admin() {
               <label>وضعیت دوره</label>
               <select name="isFree" value={course.isFree ? "free" : "paid"} onChange={(e) => {
                 const isFree = e.target.value === "free";
-                setCourse(prev => ({ ...prev, isFree, price: isFree ? 0 : prev.price || 0 }));
+                setCourse(prev => ({ ...prev, isFree }));
               }}>
                 <option value="free">🎁 رایگان</option>
                 <option value="paid">💰 پولی</option>
@@ -402,7 +783,7 @@ function Admin() {
             <div className="admin-field-half">
               <label>قیمت دوره</label>
               <input type="number" name="price" min="0" value={course.price} onChange={handleChange}
-                placeholder="قیمت به تومان" disabled={course.isFree} />
+                placeholder="قیمت به تومان" />
               <small>{course.isFree ? "دوره رایگان است" : "برای دوره پولی قیمت را وارد کنید"}</small>
             </div>
             <div className="admin-field-full">
@@ -439,11 +820,41 @@ function Admin() {
                       <div className="admin-chapter-title" onClick={() => setActiveChapter(activeChapter === chapter.id ? null : chapter.id)}>
                         <span className="admin-chapter-number">{index + 1}</span>
                         <div>
-                          <strong>{chapter.title}</strong>
-                          <small>{chapter.lessons?.length || 0} درس</small>
+                          {editingChapterId === chapter.id ? (
+                            <div className="admin-inline-edit">
+                              <input
+                                value={editingChapterTitle}
+                                onChange={(e) => setEditingChapterTitle(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  saveChapterEdit(chapter.id);
+                                }}
+                              >💾</button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingChapterId(null);
+                                  setEditingChapterTitle("");
+                                }}
+                              >✖</button>
+                            </div>
+                          ) : (
+                            <>
+                              <strong>{chapter.title}</strong>
+                              <small>{chapter.lessons?.length || 0} درس</small>
+                            </>
+                          )}
                         </div>
                       </div>
-                      <button className="admin-chapter-delete" onClick={() => deleteChapter(chapter.id)} type="button">🗑</button>
+                      <div className="admin-chapter-actions">
+                        <button onClick={(e) => { e.stopPropagation(); editChapter(chapter); }} type="button">✏️</button>
+                        <button className="admin-chapter-delete" onClick={(e) => { e.stopPropagation(); deleteChapter(chapter.id); }} type="button">🗑</button>
+                      </div>
                     </div>
                     {activeChapter === chapter.id && (
                       <div className="admin-lessons-section">
@@ -451,6 +862,9 @@ function Admin() {
                           <h5>➕ افزودن درس</h5>
                           <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="عنوان درس..." />
                           <input value={lessonVideo} onChange={(e) => setLessonVideo(e.target.value)} placeholder="لینک ویدئو..." />
+                          <input value={lessonDuration} onChange={(e) => setLessonDuration(e.target.value)} placeholder="مدت زمان درس، مثلاً 12:30" />
+                          <textarea value={lessonDescription} onChange={(e) => setLessonDescription(e.target.value)} placeholder="توضیحات درس..." />
+                          <input type="number" min="1" value={lessonSortOrder} onChange={(e) => setLessonSortOrder(e.target.value)} placeholder="ترتیب درس" />
                           <label className="admin-lesson-free">
                             <input type="checkbox" checked={lessonFree} onChange={(e) => setLessonFree(e.target.checked)} />
                             <span>🔓 این درس رایگان است</span>
@@ -463,15 +877,70 @@ function Admin() {
                           ) : (
                             chapter.lessons.map((lesson, li) => (
                               <div className="admin-lesson-item" key={lesson.id}>
-                                <div className="admin-lesson-info">
-                                  <span className="admin-lesson-number">{li + 1}</span>
-                                  <strong>{lesson.title}</strong>
-                                  {lesson.video && <span className="admin-lesson-video">🎬 {lesson.video}</span>}
-                                </div>
-                                <div className="admin-lesson-actions">
-                                  {lesson.free && <span className="admin-lesson-free-badge">رایگان</span>}
-                                  <button onClick={() => deleteLesson(chapter.id, lesson.id)} type="button">🗑</button>
-                                </div>
+                                {editingLessonId === lesson.id ? (
+                                  <div className="admin-lesson-edit">
+                                    <input
+                                      value={editingLessonTitle}
+                                      onChange={(e) => setEditingLessonTitle(e.target.value)}
+                                      placeholder="عنوان درس..."
+                                    />
+                                    <input
+                                      value={editingLessonVideo}
+                                      onChange={(e) => setEditingLessonVideo(e.target.value)}
+                                      placeholder="لینک ویدئو..."
+                                    />
+                                    <input
+                                      value={editingLessonDuration}
+                                      onChange={(e) => setEditingLessonDuration(e.target.value)}
+                                      placeholder="مدت زمان درس، مثلاً 12:30"
+                                    />
+                                    <textarea
+                                      value={editingLessonDescription}
+                                      onChange={(e) => setEditingLessonDescription(e.target.value)}
+                                      placeholder="توضیحات درس..."
+                                    />
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={editingLessonSortOrder}
+                                      onChange={(e) => setEditingLessonSortOrder(e.target.value)}
+                                      placeholder="ترتیب درس"
+                                    />
+                                    <label className="admin-lesson-free">
+                                      <input
+                                        type="checkbox"
+                                        checked={editingLessonFree}
+                                        onChange={(e) => setEditingLessonFree(e.target.checked)}
+                                      />
+                                      <span>🔓 این درس رایگان است</span>
+                                    </label>
+                                    <div>
+                                      <button onClick={() => saveLessonEdit(chapter.id, lesson.id)} type="button">💾 ذخیره</button>
+                                      <button
+                                        onClick={() => {
+                                          setEditingLessonId(null);
+                                          setEditingLessonTitle("");
+                                          setEditingLessonVideo("");
+                                          setEditingLessonFree(false);
+                                        }}
+                                        type="button"
+                                      >✖ انصراف</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="admin-lesson-info">
+                                      <span className="admin-lesson-number">{li + 1}</span>
+                                      <strong>{lesson.title}</strong>
+                                      {lesson.video && <span className="admin-lesson-video">🎬 {lesson.video}</span>}
+                                    </div>
+                                    <div className="admin-lesson-actions">
+                                      {lesson.free && <span className="admin-lesson-free-badge">رایگان</span>}
+                                      <button onClick={() => editLesson(lesson)} type="button">✏️</button>
+                                      <button onClick={() => deleteLesson(chapter.id, lesson.id)} type="button">🗑</button>
+                                    </div>
+                                  </>
+                                )}
                               </div>
                             ))
                           )}

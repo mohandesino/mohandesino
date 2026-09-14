@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
@@ -22,11 +23,14 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Faq from "./pages/Faq";
+import Certificate from "./components/Certificate";
 
 function App() {
   return (
     <>
       <Header />
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/courses" element={<Courses />} />
@@ -42,10 +46,13 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/player" element={<Player />} />
+        
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/certificate/:id" element={<Certificate />} />
       </Routes>
       <Footer />
     </>

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+const normalizePhone = (value) => value.replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 1632));
+
 function Signup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -11,7 +13,8 @@ function Signup() {
 
   const sendCode = (e) => {
     e.preventDefault();
-    if (phone.length < 10) {
+    const normalizedPhone = normalizePhone(phone);
+    if (normalizedPhone.length < 10) {
       alert("📱 لطفاً شماره موبایل معتبر وارد کنید.");
       return;
     }
@@ -30,7 +33,7 @@ function Signup() {
 
     setTimeout(() => {
       const users = JSON.parse(localStorage.getItem("mohandesino_users") || "[]");
-      const exists = users.some(u => u.phone === phone);
+      const exists = users.some(u => normalizePhone(u.phone) === normalizedPhone);
 
       if (exists) {
         alert("❌ این شماره قبلاً ثبت‌نام شده است. لطفاً وارد شوید.");
@@ -39,48 +42,45 @@ function Signup() {
         return;
       }
 
-      const newUser = { name: name || "کاربر", phone };
+      const newUser = { name: name || "کاربر", phone: normalizedPhone };
       users.push(newUser);
       localStorage.setItem("mohandesino_users", JSON.stringify(users));
 
       const adminPhones = ["09927533272", "09051627714"];
       const user = {
         name: newUser.name,
-        phone: phone,
-        isAdmin: adminPhones.includes(phone),
+        phone: normalizedPhone,
+        isAdmin: adminPhones.includes(normalizedPhone),
       };
       localStorage.setItem("mohandesino_user", JSON.stringify(user));
 
+      // ===== پیام خوش‌آمدگویی به کاربر جدید =====
+      localStorage.setItem("mohandesino_welcome_shown", "true");
+      alert("🎉 تبریک! ثبت‌نام تو با موفقیت انجام شد. به جمع مهندسینو خوش آمدی.");
+
       setLoading(false);
-      alert("🎉 تبریک! ثبت‌نام شما با موفقیت انجام شد. به جمع مهندسینو خوش آمدی.");
       navigate("/");
       window.location.reload();
     }, 800);
   };
 
   return (
-    <main className="auth-page-modern" dir="rtl">
-      <div className="auth-wrapper">
-        <div className="auth-brand">
-          <div className="auth-brand-icon">🎓</div>
-          <h2>مهندسینو</h2>
-          <p>آموزش مهندسی، کاربردی و ساده</p>
-        </div>
-
-        <div className="auth-card-modern">
-          <div className="auth-card-header">
-            <div className="auth-card-icon">{step === 1 ? "🚀" : "📱"}</div>
-            <h1>{step === 1 ? "عضو جدید؟" : "تأیید شماره"}</h1>
+    <main className="auth-page" dir="rtl">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="auth-icon">🚀</div>
+            <h1>{step === 1 ? "ساخت حساب جدید" : "تأیید شماره"}</h1>
             <p>
               {step === 1
-                ? "شماره موبایل خود را وارد کن تا ثبت‌نام را شروع کنی"
+                ? "برای شروع یادگیری شماره موبایلت رو وارد کن"
                 : `کد ۶ رقمی ارسال‌شده به ${phone} را وارد کن`}
             </p>
           </div>
 
           {step === 1 ? (
-            <form onSubmit={sendCode} className="auth-form-modern" autoComplete="off">
-              <div className="auth-input-group">
+            <form onSubmit={sendCode} className="auth-form" autoComplete="off">
+              <div className="auth-field">
                 <label>📱 شماره موبایل</label>
                 <input
                   type="tel"
@@ -93,7 +93,7 @@ function Signup() {
                 />
               </div>
 
-              <div className="auth-input-group">
+              <div className="auth-field">
                 <label>👤 نام و نام خانوادگی (اختیاری)</label>
                 <input
                   type="text"
@@ -104,13 +104,11 @@ function Signup() {
                 />
               </div>
 
-              <button type="submit" className="auth-submit-btn">
-                📨 دریافت کد تأیید
-              </button>
+              <button type="submit" className="auth-button">دریافت کد تأیید</button>
             </form>
           ) : (
-            <form onSubmit={verifyCode} className="auth-form-modern" autoComplete="off">
-              <div className="auth-input-group">
+            <form onSubmit={verifyCode} className="auth-form" autoComplete="off">
+              <div className="auth-field">
                 <label>🔑 کد تأیید</label>
                 <input
                   type="text"
@@ -118,17 +116,16 @@ function Signup() {
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="------"
                   maxLength="6"
-                  className="auth-code-input"
+                  className="code-input"
                   required
                   autoComplete="off"
                 />
-                <small className="auth-code-hint">کد تأیید: <strong>۱۲۳۴۵۶</strong> (برای تست)</small>
               </div>
 
-              <button type="submit" className="auth-submit-btn" disabled={loading}>
+              <button type="submit" className="auth-button" disabled={loading}>
                 {loading ? (
                   <>
-                    <span className="auth-spinner"></span>
+                    <span className="spinner-small"></span>
                     در حال تأیید...
                   </>
                 ) : (
@@ -139,19 +136,19 @@ function Signup() {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="auth-back-btn"
+                className="auth-back"
               >
                 ← برگشت به مرحله قبل
               </button>
             </form>
           )}
 
-          <div className="auth-divider-line">
+          <div className="auth-divider">
             <span>یا</span>
           </div>
 
-          <div className="auth-footer-text">
-            <p>قبلاً حساب داری؟ <Link to="/login" className="auth-footer-link">وارد شو</Link></p>
+          <div className="auth-footer">
+            <p>قبلاً حساب داری؟ <Link to="/login" className="auth-link">ورود</Link></p>
           </div>
         </div>
       </div>

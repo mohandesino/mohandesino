@@ -6,16 +6,23 @@ function Footer() {
   const location = useLocation();
   const [settings, setSettings] = useState({
     siteTitle: "مهندسینو",
-    aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده، مفهومی و کاربردی مباحث مهندسی است.",
-    telegram: "https://t.me/mohandesino",
+    aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده و مفهومی ریاضی و فیزیک است.",
+    telegram: "https://t.me/mohandesino2026",
     instagram: "https://instagram.com/mohandesino",
     email: "info@mohandesino.ir",
-    phone: "۰۲۱-۱۲۳۴۵۶۷۸"
+    phone: "۰۲۱-۱۲۳۴۵۶۷۸",
+    address: "",
+    showFaq: true,
   });
 
   useEffect(() => {
     const saved = localStorage.getItem("mohandesino_settings");
-    if (saved) setSettings(JSON.parse(saved));
+    if (saved) {
+      const data = JSON.parse(saved);
+      setSettings(prev => ({ ...prev, ...data }));
+    } else {
+      localStorage.setItem("mohandesino_settings", JSON.stringify(settings));
+    }
   }, []);
 
   const isActive = (path) => location.pathname === path ? "active" : "";
@@ -23,7 +30,7 @@ function Footer() {
   return (
     <footer className="site-footer-pro" dir="rtl">
 
-      {/* ===== منوی پایین حرفه‌ای (موبایل و دسکتاپ) ===== */}
+      {/* ===== منوی پایین (موبایل و دسکتاپ) ===== */}
       <div className="footer-nav-pro">
         <Link to="/" className={`footer-nav-item-pro ${isActive("/")}`}>
           <span className="footer-nav-icon-pro">🏠</span>
@@ -31,7 +38,7 @@ function Footer() {
         </Link>
         <Link to="/courses" className={`footer-nav-item-pro ${isActive("/courses")}`}>
           <span className="footer-nav-icon-pro">📚</span>
-          <span className="footer-nav-label-pro">دسته‌بندی</span>
+          <span className="footer-nav-label-pro">دوره‌ها</span>
         </Link>
         <Link to="/cart" className={`footer-nav-item-pro ${isActive("/cart")}`}>
           <span className="footer-nav-icon-pro">🛒</span>
@@ -67,13 +74,16 @@ function Footer() {
           <Link to="/about">ℹ️ درباره ما</Link>
           <Link to="/contact">📞 تماس با ما</Link>
           <Link to="/blog">📝 مجله</Link>
+          {settings.showFaq !== false && (
+            <Link to="/faq">❓ سوالات متداول</Link>
+          )}
         </div>
 
         <div className="footer-contact-pro">
           <h4>اطلاعات تماس</h4>
-          <p>📞 {settings.phone}</p>
-          <p>📧 {settings.email}</p>
-          <p>📍 تهران، خیابان مهندسینو</p>
+          {settings.phone && <p>📞 {settings.phone}</p>}
+          {settings.email && <p>📧 {settings.email}</p>}
+          {settings.address && <p>📍 {settings.address}</p>}
         </div>
       </div>
 

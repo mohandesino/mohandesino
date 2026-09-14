@@ -6,6 +6,8 @@ function MyCourses() {
   const [progressData, setProgressData] = useState({});
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     const saved = localStorage.getItem("mohandesino_my_courses");
     if (saved) {
       const courses = JSON.parse(saved);

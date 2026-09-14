@@ -1,147 +1,285 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-function Courses() {
+const Icon = ({ children }) => (
+  <span className="courses-icon" aria-hidden="true">
+    {children}
+  </span>
+);
+
+export default function Courses() {
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("همه");
-  const [filterType, setFilterType] = useState("همه");
-  const [categories, setCategories] = useState(["همه", "ریاضی", "برق", "برنامه‌نویسی", "مهندسی صنایع", "سایر"]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("mohandesino_courses");
-    if (saved) {
-      setCourses(JSON.parse(saved));
-    } else {
-      const defaultCourses = [
-        {
-          id: "1",
-          title: "آموزش جامع توان و رادیکال",
-          category: "ریاضی",
-          level: "مقدماتی تا پیشرفته",
-          price: 0,
-          isFree: true,
-          image: "",
-          description: "آموزش کامل مبحث توان و رادیکال از مفاهیم پایه تا حل مسائل پیشرفته.",
-          chapters: []
-        },
-        {
-          id: "2",
-          title: "آموزش انتگرال از پایه تا دانشگاه",
-          category: "ریاضی",
-          level: "مقدماتی تا پیشرفته",
-          price: 0,
-          isFree: true,
-          image: "",
-          description: "آموزش کامل انتگرال شامل انتگرال معین، نامعین، روش‌های حل انتگرال.",
-          chapters: []
-        },
-        {
-          id: "3",
-          title: "Excel برای مهندسان",
-          category: "مهندسی صنایع",
-          level: "کاربردی",
-          price: 0,
-          isFree: true,
-          image: "",
-          description: "آموزش کامل Excel با تمرکز بر کاربردهای مهندسی.",
-          chapters: []
-        }
-      ];
-      localStorage.setItem("mohandesino_courses", JSON.stringify(defaultCourses));
-      setCourses(defaultCourses);
-    }
-
-    const savedCategories = localStorage.getItem("mohandesino_categories");
-    if (savedCategories) {
-      const parsed = JSON.parse(savedCategories);
-      if (parsed.length > 0) {
-        setCategories(["همه", ...parsed]);
-        return;
-      }
-    }
-    localStorage.setItem("mohandesino_categories", JSON.stringify(["ریاضی", "برق", "برنامه‌نویسی", "مهندسی صنایع", "سایر"]));
-    setCategories(["همه", "ریاضی", "برق", "برنامه‌نویسی", "مهندسی صنایع", "سایر"]);
+    fetch("http://localhost:3000/api/courses")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        setCourses(Array.isArray(data.courses) ? data.courses : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("دریافت دوره‌ها با مشکل مواجه شد.");
+        setLoading(false);
+      });
   }, []);
 
-  const filtered = courses.filter(item => {
-    const matchSearch = item.title.includes(search) || item.description.includes(search);
-    const matchCategory = category === "همه" || item.category === category;
-    const matchType = filterType === "همه" ||
-      (filterType === "🎁 رایگان" && (item.isFree === true || Number(item.price) === 0)) ||
-      (filterType === "💰 پولی" && item.isFree === false && Number(item.price) > 0);
-    return matchSearch && matchCategory && matchType;
-  });
+  const categories = useMemo(
+    () => ["همه", ...new Set(courses.map((c) => c.category).filter(Boolean))],
+    [courses]
+  );
 
-  const filterTypes = ["همه", "🎁 رایگان", "💰 پولی"];
+  const filteredCourses = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return courses.filter((course) => {
+      const categoryMatch =
+        category === "همه" || course.category === category;
+
+      const text = [
+        course.title,
+        course.description,
+        course.category,
+        course.level,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return categoryMatch && (!q || text.includes(q));
+    });
+  }, [courses, search, category]);
+
+  const formatPrice = (value) =>
+    new Intl.NumberFormat("fa-IR").format(Number(value || 0));
+
+  if (loading) {
+    return (
+      <main className="courses-page courses-state" dir="rtl">
+        <div className="courses-state-card">
+          <div className="courses-loader" />
+          <h2>در حال آماده‌سازی دوره‌ها</h2>
+          <p>لطفاً چند لحظه صبر کنید...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="courses-page courses-state" dir="rtl">
+        <div className="courses-state-card">
+          <div className="courses-state-icon">!</div>
+          <h2>خطا در دریافت اطلاعات</h2>
+          <p>{error}</p>
+          <button
+            className="courses-retry"
+            onClick={() => window.location.reload()}
+          >
+            تلاش مجدد
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="courses-page" dir="rtl">
       <section className="courses-hero">
-        <span>مهندسینو</span>
-        <h1>دوره‌های آموزشی</h1>
-        <p>مسیر یادگیری مهندسی را از اینجا شروع کن.</p>
+        <div className="courses-hero-glow courses-hero-glow-one" />
+        <div className="courses-hero-glow courses-hero-glow-two" />
+
+        <div className="page-container courses-hero-content">
+          <div className="courses-badge">
+            🎓 آموزش ساده و کاربردی
+          </div>
+
+          <h1>
+            دوره‌های آموزشی <span>مهندسینو</span>
+          </h1>
+
+          <p>
+            مسیر یادگیری مناسب خودت را انتخاب کن و مهارت‌هایت را
+            قدم‌به‌قدم توسعه بده.
+          </p>
+
+          <div className="courses-hero-stats">
+            <div>
+              <strong>{courses.length.toLocaleString("fa-IR")}</strong>
+              <span>دوره آموزشی</span>
+            </div>
+
+            <div>
+              <strong>۲۴/۷</strong>
+              <span>دسترسی آنلاین</span>
+            </div>
+
+            <div>
+              <strong>🎯</strong>
+              <span>یادگیری هدفمند</span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="courses-filter-section">
-        <input type="text" placeholder="جستجوی دوره..." value={search}
-          onChange={(e) => setSearch(e.target.value)} className="search-input" />
+      <section className="page-container courses-catalog">
+        <div className="courses-heading">
+          <div>
+            <span>📚 کتابخانه آموزشی</span>
+            <h2>همه دوره‌ها</h2>
+            <p>دوره موردنظرت را پیدا کن و یادگیری را شروع کن.</p>
+          </div>
 
-        <div className="filter-group">
-          <div className="filter-label">دسته‌بندی:</div>
-          <div className="category-filters">
-            {categories.map(cat => (
-              <button key={cat} onClick={() => setCategory(cat)}
-                className={category === cat ? "active-filter" : ""}
-                type="button">
-                {cat}
+          <div className="courses-count">
+            <strong>
+              {filteredCourses.length.toLocaleString("fa-IR")}
+            </strong>
+            <span>دوره</span>
+          </div>
+        </div>
+
+        <div className="courses-toolbar">
+          <div className="courses-search">
+            <Icon>⌕</Icon>
+
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="جستجوی دوره، موضوع یا مهارت..."
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="پاک کردن جستجو"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className="courses-filters">
+            {categories.map((item) => (
+              <button
+                type="button"
+                key={item}
+                className={category === item ? "active" : ""}
+                onClick={() => setCategory(item)}
+              >
+                {item}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="filter-group">
-          <div className="filter-label">وضعیت:</div>
-          <div className="category-filters">
-            {filterTypes.map(type => (
-              <button key={type} onClick={() => setFilterType(type)}
-                className={filterType === type ? "active-filter" : ""}
-                type="button">
-                {type}
+        {filteredCourses.length === 0 ? (
+          <div className="courses-empty">
+            <div>🔎</div>
+            <h3>دوره‌ای پیدا نشد</h3>
+            <p>عبارت جستجو یا دسته‌بندی دیگری را امتحان کنید.</p>
+            {(search || category !== "همه") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setCategory("همه");
+                }}
+              >
+                نمایش همه دوره‌ها
               </button>
-            ))}
+            )}
           </div>
-        </div>
-      </section>
-
-      <section className="courses-content">
-        {filtered.length === 0 ? (
-          <div className="courses-empty"><div>📚</div><h2>دوره‌ای یافت نشد</h2><p>سعی کن با کلمات دیگه جستجو کنی.</p></div>
         ) : (
-          <div className="course-grid">
-            {filtered.map(item => (
-              <article className={`home-course-card ${item.isFree ? "free" : "paid"}`} key={item.id}>
-                <div className="course-thumbnail">
-                  <span className="course-thumbnail-icon">{item.image ? <img src={item.image} alt={item.title} /> : "📐"}</span>
-                  {item.isFree ? <span className="free-badge">🎁 رایگان</span> : <span className="paid-badge">💰 پولی</span>}
-                </div>
-                <div className="course-card-body">
-                  <span className="course-category">{item.category}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                  <div className="course-card-bottom">
-                    <span>{item.level}</span>
-                    <strong>{item.isFree ? "رایگان" : `${Number(item.price).toLocaleString()} تومان`}</strong>
+          <div className="course-grid courses-grid">
+            {filteredCourses.map((course) => {
+              const isFree =
+                Boolean(course.is_free) ||
+                Boolean(course.isFree) ||
+                Number(course.price || 0) === 0;
+
+              const lessons = (course.chapters || []).reduce(
+                (total, chapter) =>
+                  total + (chapter.lessons || []).length,
+                0
+              );
+
+              return (
+                <article className="home-course-card" key={course.id}>
+                  <Link
+                    to={`/course/${course.id}`}
+                    className="course-thumbnail courses-thumbnail"
+                  >
+                    {course.image ? (
+                      <img
+                        src={course.image}
+                        alt={course.title || "دوره مهندسینو"}
+                      />
+                    ) : (
+                      <span className="course-thumbnail-icon">
+                        {isFree ? "📚" : "💎"}
+                      </span>
+                    )}
+
+                    <span
+                      className={
+                        isFree ? "free-badge" : "paid-badge"
+                      }
+                    >
+                      {isFree ? "رایگان" : "پولی"}
+                    </span>
+                  </Link>
+
+                  <div className="course-card-body">
+                    <div className="courses-card-meta">
+                      <span className="course-category">
+                        {course.category || "آموزشی"}
+                      </span>
+
+                      {lessons > 0 && (
+                        <span>{lessons.toLocaleString("fa-IR")} درس</span>
+                      )}
+                    </div>
+
+                    <h3>
+                      <Link to={`/course/${course.id}`}>
+                        {course.title || "دوره آموزشی مهندسینو"}
+                      </Link>
+                    </h3>
+
+                    <p>
+                      {course.description ||
+                        "یک مسیر آموزشی کاربردی برای یادگیری بهتر و رسیدن به مهارت."}
+                    </p>
+
+                    <div className="course-card-bottom">
+                      <span>{course.level || "مقدماتی"}</span>
+                      <strong>
+                        {isFree
+                          ? "رایگان"
+                          : `${formatPrice(course.price)} تومان`}
+                      </strong>
+                    </div>
+
+                    <Link
+                      to={`/course/${course.id}`}
+                      className="course-view-button"
+                    >
+                      مشاهده دوره ←
+                    </Link>
                   </div>
-                  <Link to={`/course/${item.id}`} className="course-view-button">مشاهده دوره ←</Link>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
     </main>
   );
 }
-
-export default Courses;
