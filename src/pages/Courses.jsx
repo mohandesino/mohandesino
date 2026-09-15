@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { courses as localCourses } from "../data/courses.js";
 
 const Icon = ({ children }) => (
   <span className="courses-icon" aria-hidden="true">
@@ -15,19 +16,8 @@ export default function Courses() {
   const [category, setCategory] = useState("همه");
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/courses")
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then((data) => {
-        setCourses(Array.isArray(data.courses) ? data.courses : []);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("دریافت دوره‌ها با مشکل مواجه شد.");
-        setLoading(false);
-      });
+    setCourses(localCourses);
+    setLoading(false);
   }, []);
 
   const categories = useMemo(
