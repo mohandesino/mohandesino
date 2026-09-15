@@ -30,6 +30,29 @@ function Course() {
     }
   }, [id, navigate]);
 
+  const handlePurchase = () => {
+    if (!course) return;
+
+    if (course.isFree || Number(course.price) === 0) {
+      const updated = [
+        ...myCourses.filter((c) => String(c.id) !== String(course.id)),
+        course,
+      ];
+
+      localStorage.setItem(
+        "mohandesino_my_courses",
+        JSON.stringify(updated)
+      );
+
+      setMyCourses(updated);
+      setIsPurchased(true);
+      alert("🎁 دوره رایگان به دوره‌های من اضافه شد!");
+      return;
+    }
+
+    navigate(`/checkout/${course.id}`);
+  };
+
   if (!course) {
     return (
       <main className="course-page" dir="rtl">
