@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const defaultCourses = [
   {
@@ -33,6 +33,20 @@ function getCourses() {
 
 function AdminPanel() {
   const [activeTab, setActiveTab] = useState("courses");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [chapters, setChapters] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [showChapterForm, setShowChapterForm] = useState(false);
+  const [showLessonForm, setShowLessonForm] = useState(false);
+  const [chapterTitle, setChapterTitle] = useState("");
+  const [lessonForm, setLessonForm] = useState({
+    title: "",
+    video: "",
+    free: 0,
+    duration: "",
+    description: "",
+    sort_order: 0,
+  });
 
   const [courses, setCourses] = useState(getCourses);
 
@@ -44,6 +58,76 @@ function AdminPanel() {
     price: "",
     description: "",
   });
+
+  useEffect(() => {
+    if (!selectedCourse) {
+      setChapters([]);
+      return;
+    }
+
+    fetch(`http://localhost:3000/api/courses/${selectedCourse}/chapters`)
+      .then((res) => res.json())
+      .then((data) => setChapters(data.chapters || []))
+      .catch(() => setChapters([]));
+  }, [selectedCourse]);
+
+  const loadLessons = (chapterId) => {
+    fetch(`http://localhost:3000/api/chapters/${chapterId}/lessons`)
+      .then((res) => res.json())
+      .then((data) => setLessons(data.lessons || []))
+      .catch(() => setLessons([]));
+  };
+
+  const addChapter = async () => {
+    if (!selectedCourse || !chapterTitle.trim()) return;
+
+    const res = await fetch("http://localhost:3000/api/chapters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        course_id: Number(selectedCourse),
+        title: chapterTitle,
+        sort_order: chapters.length,
+      }),
+    });
+
+    if (res.ok) {
+      setChapterTitle("");
+      setShowChapterForm(false);
+      const data = await fetch(
+        `http://localhost:3000/api/courses/${selectedCourse}/chapters`
+      ).then((r) => r.json());
+      setChapters(data.chapters || []);
+    }
+  };
+
+  const addLesson = async (chapterId) => {
+    if (!lessonForm.title.trim()) return;
+
+    const res = await fetch("http://localhost:3000/api/lessons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chapter_id: Number(chapterId),
+        ...lessonForm,
+        free: Number(lessonForm.free),
+        sort_order: lessons.length,
+      }),
+    });
+
+    if (res.ok) {
+      setLessonForm({
+        title: "",
+        video: "",
+        free: 0,
+        duration: "",
+        description: "",
+        sort_order: 0,
+      });
+      setShowLessonForm(false);
+      loadLessons(chapterId);
+    }
+  };
 
   const handleChange = (e) => {
     setCourse({
@@ -381,18 +465,132 @@ function AdminPanel() {
           )}
 
           {activeTab === "lessons" && (
-            <section className="admin-empty">
+            <section className="admin-lessons">
 
-              <div>🎬</div>
+              <div className="admin-title">
+                <div>
+                  <h2>🎬 مدیریت جلسات</h2>
+                  <p>فصل‌ها و درس‌های هر دوره را مدیریت کنید.</p>
+                </div>
+              </div>
 
-              <h2>
-                مدیریت جلسات
-              </h2>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+              >
+                <option value="">انتخاب دوره</option>
+                {courses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
 
-              <p>
-                بعد از ساخت دوره، جلسات و ویدیوهای آن
-                را از این قسمت اضافه می‌کنیم.
-              </p>
+              {selectedCourse && (
+                <>
+                  <button
+                    className="form-save"
+                    onClick={() => setShowChapterForm(!showChapterForm)}
+                  >
+                    ➕ افزودن فصل
+                  </button>
+
+                  {showChapterForm && (
+                    <div className="admin-form">
+                      <input
+                        value={chapterTitle}
+                        onChange={(e) => setChapterTitle(e.target.value)}
+                        placeholder="عنوان فصل"
+                      />
+                      <button className="form-save" onClick={addChapter}>
+                        ذخیره فصل
+                      </button>
+                    </div>
+                  )}
+
+                  {chapters.map((chapter) => (
+                    <div key={chapter.id} className="admin-chapter">
+                      <h3>📁 {chapter.title}</h3>
+
+                      <button
+                        className="form-save"
+                        onClick={() => {
+                          setShowLessonForm(true);
+                          loadLessons(chapter.id);
+                        }}
+                      >
+                        ➕ افزودن درس
+                      </button>
+
+                      {showLessonForm && (
+                        <div className="admin-form">
+                          <input
+                            placeholder="عنوان درس"
+                            value={lessonForm.title}
+                            onChange={(e) =>
+                              setLessonForm({
+                                ...lessonForm,
+                                title: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            placeholder="لینک ویدئو"
+                            value={lessonForm.video}
+                            onChange={(e) =>
+                              setLessonForm({
+                                ...lessonForm,
+                                video: e.target.value,
+                              })
+                            }
+                          />
+
+                          <input
+                            placeholder="مدت زمان"
+                            value={lessonForm.duration}
+                            onChange={(e) =>
+                              setLessonForm({
+                                ...lessonForm,
+                                duration: e.target.value,
+                              })
+                            }
+                          />
+
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={Number(lessonForm.free) === 1}
+                              onChange={(e) =>
+                                setLessonForm({
+                                  ...lessonForm,
+                                  free: e.target.checked ? 1 : 0,
+                                })
+                              }
+                            />
+                            درس رایگان
+                          </label>
+
+                          <button
+                            className="form-save"
+                            onClick={() => addLesson(chapter.id)}
+                          >
+                            ذخیره درس
+                          </button>
+                        </div>
+                      )}
+
+                      {lessons.map((lesson) => (
+                        <div key={lesson.id} className="admin-lesson">
+                          🎬 {lesson.title}
+                          {lesson.duration && ` — ${lesson.duration}`}
+                          {Number(lesson.free) === 1 && " — رایگان"}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </>
+              )}
 
             </section>
           )}
