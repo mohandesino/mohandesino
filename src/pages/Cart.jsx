@@ -1,39 +1,23 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { courses as localCourses } from "../data/courses.js";
 
 function Cart() {
   const { dark } = useTheme();
-  const [cartItems, setCartItems] = useState([]);
-  const [courses, setCourses] = useState([]);
-
-  useEffect(() => {
+  const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("mohandesino_cart");
-
-    if (savedCart) {
-      try {
-        const cart = JSON.parse(savedCart);
-        setCartItems(Array.isArray(cart) ? cart : []);
-      } catch {
-        setCartItems([]);
-      }
+    if (!savedCart) return [];
+    try {
+      const cart = JSON.parse(savedCart);
+      return Array.isArray(cart) ? cart : [];
+    } catch {
+      return [];
     }
+  });
+  const courses = localCourses;
 
-    const loadCourses = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/courses");
-        const data = await response.json();
 
-        if (response.ok && data.success) {
-          setCourses(data.courses || []);
-        }
-      } catch (error) {
-        console.error("خطا در دریافت دوره‌ها:", error);
-      }
-    };
-
-    loadCourses();
-  }, []);
 
   const cartCourses = cartItems
     .map((id) =>

@@ -1,159 +1,131 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../config.js";
 
-const normalizePhone = (value) => value.replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 1776)).replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 1632));
+const API = API_BASE;
 
-function Signup() {
+export default function Signup() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
+
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const sendCode = (e) => {
-    e.preventDefault();
-    const normalizedPhone = normalizePhone(phone);
-    if (normalizedPhone.length < 10) {
-      alert("📱 لطفاً شماره موبایل معتبر وارد کنید.");
-      return;
-    }
-    setStep(2);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const verifyCode = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setError("");
 
-    if (code.length !== 6) {
-      alert("🔑 کد تأیید باید ۶ رقمی باشد.");
-      setLoading(false);
+    if (!/^09\d{9}$/.test(form.phone.trim())) {
+      setError("شماره موبایل معتبر نیست");
       return;
     }
 
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("mohandesino_users") || "[]");
-      const exists = users.some(u => normalizePhone(u.phone) === normalizedPhone);
+    if (form.password.length < 6) {
+      setError("رمز عبور باید حداقل ۶ کاراکتر باشد");
+      return;
+    }
 
-      if (exists) {
-        alert("❌ این شماره قبلاً ثبت‌نام شده است. لطفاً وارد شوید.");
-        navigate("/login");
-        setLoading(false);
-        return;
+    if (form.password !== form.confirmPassword) {
+      setError("تکرار رمز عبور صحیح نیست");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API}/api/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "ثبت‌نام انجام نشد");
       }
 
-      const newUser = { name: name || "کاربر", phone: normalizedPhone };
-      users.push(newUser);
-      localStorage.setItem("mohandesino_users", JSON.stringify(users));
+      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
 
-      const adminPhones = ["09927533272", "09051627714"];
-      const user = {
-        name: newUser.name,
-        phone: normalizedPhone,
-        isAdmin: adminPhones.includes(normalizedPhone),
-      };
-      localStorage.setItem("mohandesino_user", JSON.stringify(user));
-
-      // ===== پیام خوش‌آمدگویی به کاربر جدید =====
-      localStorage.setItem("mohandesino_welcome_shown", "true");
-      alert("🎉 تبریک! ثبت‌نام تو با موفقیت انجام شد. به جمع مهندسینو خوش آمدی.");
-
-      setLoading(false);
       navigate("/");
-      window.location.reload();
-    }, 800);
+    } catch (err) {
+      setError(err.message || "خطا در ارتباط با سرور");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <main className="auth-page" dir="rtl">
-      <div className="auth-container">
-        <div className="auth-card">
-          <div className="auth-header">
-            <div className="auth-icon">🚀</div>
-            <h1>{step === 1 ? "ساخت حساب جدید" : "تأیید شماره"}</h1>
-            <p>
-              {step === 1
-                ? "برای شروع یادگیری شماره موبایلت رو وارد کن"
-                : `کد ۶ رقمی ارسال‌شده به ${phone} را وارد کن`}
-            </p>
-          </div>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1>ایجاد حساب</h1>
+        <p>در مهندسینو حساب کاربری بسازید</p>
 
-          {step === 1 ? (
-            <form onSubmit={sendCode} className="auth-form" autoComplete="off">
-              <div className="auth-field">
-                <label>📱 شماره موبایل</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                  maxLength="11"
-                  required
-                  autoComplete="off"
-                />
-              </div>
+        <form onSubmit={handleSignup}>
+          <input
+            type="text"
+            name="name"
+            placeholder="نام و نام خانوادگی"
+            value={form.name}
+            onChange={handleChange}
+          />
 
-              <div className="auth-field">
-                <label>👤 نام و نام خانوادگی (اختیاری)</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="نام خود را وارد کنید..."
-                  autoComplete="off"
-                />
-              </div>
+          <input
+            type="tel"
+            name="phone"
+            placeholder="شماره موبایل"
+            value={form.phone}
+            onChange={handleChange}
+            dir="ltr"
+          />
 
-              <button type="submit" className="auth-button">دریافت کد تأیید</button>
-            </form>
-          ) : (
-            <form onSubmit={verifyCode} className="auth-form" autoComplete="off">
-              <div className="auth-field">
-                <label>🔑 کد تأیید</label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="------"
-                  maxLength="6"
-                  className="code-input"
-                  required
-                  autoComplete="off"
-                />
-              </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="رمز عبور"
+            value={form.password}
+            onChange={handleChange}
+            dir="ltr"
+          />
 
-              <button type="submit" className="auth-button" disabled={loading}>
-                {loading ? (
-                  <>
-                    <span className="spinner-small"></span>
-                    در حال تأیید...
-                  </>
-                ) : (
-                  '✅ تأیید و ورود'
-                )}
-              </button>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="تکرار رمز عبور"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            dir="ltr"
+          />
 
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="auth-back"
-              >
-                ← برگشت به مرحله قبل
-              </button>
-            </form>
-          )}
+          {error && <div className="auth-error">{error}</div>}
 
-          <div className="auth-divider">
-            <span>یا</span>
-          </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "در حال ثبت‌نام..." : "ثبت‌نام"}
+          </button>
+        </form>
 
-          <div className="auth-footer">
-            <p>قبلاً حساب داری؟ <Link to="/login" className="auth-link">ورود</Link></p>
-          </div>
-        </div>
+        <p>
+          قبلاً حساب دارید؟{" "}
+          <Link to="/login">ورود به حساب</Link>
+        </p>
       </div>
-    </main>
+    </div>
   );
 }
-
-export default Signup;

@@ -1,3 +1,4 @@
+import { API_BASE } from "../config.js";
 import { useEffect, useState } from "react";
 
 const defaultCourses = [
@@ -65,14 +66,14 @@ function AdminPanel() {
       return;
     }
 
-    fetch(`http://localhost:3000/api/courses/${selectedCourse}/chapters`)
+    fetch(`${API_BASE}/api/courses/${selectedCourse}/chapters`)
       .then((res) => res.json())
       .then((data) => setChapters(data.chapters || []))
       .catch(() => setChapters([]));
   }, [selectedCourse]);
 
   const loadLessons = (chapterId) => {
-    fetch(`http://localhost:3000/api/chapters/${chapterId}/lessons`)
+    fetch(`${API_BASE}/api/chapters/${chapterId}/lessons`)
       .then((res) => res.json())
       .then((data) => setLessons(data.lessons || []))
       .catch(() => setLessons([]));
@@ -81,7 +82,7 @@ function AdminPanel() {
   const addChapter = async () => {
     if (!selectedCourse || !chapterTitle.trim()) return;
 
-    const res = await fetch("http://localhost:3000/api/chapters", {
+    const res = await fetch("${API_BASE}/api/chapters", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -95,7 +96,7 @@ function AdminPanel() {
       setChapterTitle("");
       setShowChapterForm(false);
       const data = await fetch(
-        `http://localhost:3000/api/courses/${selectedCourse}/chapters`
+        `${API_BASE}/api/courses/${selectedCourse}/chapters`
       ).then((r) => r.json());
       setChapters(data.chapters || []);
     }
@@ -104,7 +105,7 @@ function AdminPanel() {
   const addLesson = async (chapterId) => {
     if (!lessonForm.title.trim()) return;
 
-    const res = await fetch("http://localhost:3000/api/lessons", {
+    const res = await fetch("${API_BASE}/api/lessons", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

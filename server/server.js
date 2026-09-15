@@ -1,13 +1,52 @@
 import express from "express";
 import cors from "cors";
 import db from "./database.js";
-import { adminLogin, requireAdmin } from "./auth.js";
+import { adminLogin, registerUser, loginUser, requireAdmin } from "./auth.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const { phone = "", password = "", name = "" } = req.body;
+
+    const result = await registerUser(phone, password, name);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { phone = "", password = "" } = req.body;
+
+    const result = await loginUser(phone, password);
+
+    if (!result.success) {
+      return res.status(401).json(result);
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 app.post("/api/admin/login", (req, res) => {
   const { phone = "", password = "" } = req.body;

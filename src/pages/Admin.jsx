@@ -1,3 +1,4 @@
+import { API_BASE } from "../config.js";
 import { useEffect, useState } from "react";
 import AdminBlog from "./AdminBlog";
 
@@ -75,7 +76,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     }
 
     try {
-      const res = await fetch("http://localhost:3000/api/admin/login", {
+      const res = await fetch("${API_BASE}/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,12 +125,12 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
   };
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/courses")
+    fetch("${API_BASE}/api/courses")
       .then(res => res.json())
       .then(async data => {
         const list = data.courses || [];
         const full = await Promise.all(list.map(async item => {
-          const res = await fetch(`http://localhost:3000/api/courses/${item.id}/full`);
+          const res = await fetch(`${API_BASE}/api/courses/${item.id}/full`);
           const data = await res.json();
           return data.course || item;
         }));
@@ -212,7 +213,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!window.confirm("آیا از حذف این دوره مطمئن هستید؟")) return;
 
     try {
-      const response = await adminFetch(`http://localhost:3000/api/courses/${id}`, {
+      const response = await adminFetch(`${API_BASE}/api/courses/${id}`, {
         method: "DELETE"
       });
 
@@ -240,7 +241,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!course.id) { alert("اول دوره را ذخیره کنید، سپس فصل اضافه کنید."); return; }
 
     try {
-      const response = await adminFetch("http://localhost:3000/api/chapters", {
+      const response = await adminFetch("${API_BASE}/api/chapters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -285,7 +286,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     }
 
     try {
-      const response = await adminFetch(`http://localhost:3000/api/chapters/${chapterId}`, {
+      const response = await adminFetch(`${API_BASE}/api/chapters/${chapterId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -317,7 +318,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!window.confirm("آیا از حذف این فصل و درس‌های آن مطمئن هستید؟")) return;
 
     try {
-      const response = await adminFetch(`http://localhost:3000/api/chapters/${chapterId}`, {
+      const response = await adminFetch(`${API_BASE}/api/chapters/${chapterId}`, {
         method: "DELETE"
       });
       const data = await response.json();
@@ -343,7 +344,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       const chapter = course.chapters?.find(ch => ch.id === activeChapter);
       if (!chapter) { alert("فصل پیدا نشد."); return; }
 
-      const response = await adminFetch("http://localhost:3000/api/lessons", {
+      const response = await adminFetch("${API_BASE}/api/lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -406,7 +407,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     }
 
     try {
-      const response = await adminFetch(`http://localhost:3000/api/lessons/${lessonId}`, {
+      const response = await adminFetch(`${API_BASE}/api/lessons/${lessonId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -455,7 +456,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!window.confirm("آیا از حذف این درس مطمئن هستید؟")) return;
 
     try {
-      const response = await adminFetch(`http://localhost:3000/api/lessons/${lessonId}`, {
+      const response = await adminFetch(`${API_BASE}/api/lessons/${lessonId}`, {
         method: "DELETE"
       });
       const data = await response.json();
@@ -494,14 +495,14 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       let courseId = course.id;
 
       if (courseId) {
-        const response = await adminFetch(`http://localhost:3000/api/courses/${courseId}`, {
+        const response = await adminFetch(`${API_BASE}/api/courses/${courseId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         if (!response.ok) throw new Error("خطا در ویرایش دوره");
       } else {
-        const response = await adminFetch("http://localhost:3000/api/courses", {
+        const response = await adminFetch("${API_BASE}/api/courses", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -511,7 +512,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         courseId = data.id;
       }
 
-      const fullResponse = await fetch(`http://localhost:3000/api/courses/${courseId}/full`);
+      const fullResponse = await fetch(`${API_BASE}/api/courses/${courseId}/full`);
       const fullData = await fullResponse.json();
 
       setCourse({
@@ -522,10 +523,10 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         chapters: fullData.course?.chapters || []
       });
 
-      const listResponse = await fetch("http://localhost:3000/api/courses");
+      const listResponse = await fetch("${API_BASE}/api/courses");
       const listData = await listResponse.json();
       const fullCourses = await Promise.all((listData.courses || []).map(async item => {
-        const r = await fetch(`http://localhost:3000/api/courses/${item.id}/full`);
+        const r = await fetch(`${API_BASE}/api/courses/${item.id}/full`);
         const d = await r.json();
         return {
           ...d.course,
