@@ -1,5 +1,6 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { courses as localCourses } from "../data/courses.js";
 
 function Checkout() {
   const { id } = useParams();
@@ -9,23 +10,15 @@ function Checkout() {
   const [paymentComplete, setPaymentComplete] = useState(false);
 
   useEffect(() => {
-    const loadCourse = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/api/courses/${id}/full`);
-        const data = await response.json();
+    const found = localCourses.find(
+      (c) => String(c.id) === String(id)
+    );
 
-        if (response.ok && data.success && data.course) {
-          setCourse(data.course);
-        } else {
-          navigate("/courses");
-        }
-      } catch (error) {
-        console.error("خطا در دریافت دوره:", error);
-        navigate("/courses");
-      }
-    };
-
-    loadCourse();
+    if (found) {
+      setCourse(found);
+    } else {
+      navigate("/courses");
+    }
   }, [id, navigate]);
 
   const handlePayment = () => {
