@@ -4,7 +4,7 @@ import db from "./database.js";
 import { adminLogin, requireAdmin } from "./auth.js";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -157,6 +157,6 @@ app.put("/api/lessons/:id", requireAdmin, (req, res) => { const { title, video =
 
 app.delete("/api/lessons/:id", requireAdmin, (req, res) => { db.run("DELETE FROM lessons WHERE id = ?", [req.params.id], function(err) { if (err) return res.status(500).json({ success: false, message: err.message }); res.json({ success: true, message: "درس حذف شد" }); }); });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on http://localhost:${PORT}`);
 });
