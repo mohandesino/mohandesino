@@ -1,6 +1,7 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import CourseComments from "../components/CourseComments";
+import { courses as localCourses } from "../data/courses.js";
 
 function Course() {
   const { id } = useParams();
@@ -10,23 +11,15 @@ function Course() {
   const [isPurchased, setIsPurchased] = useState(false);
 
   useEffect(() => {
-    const loadCourse = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/api/courses/${id}/full`);
-        const data = await response.json();
+    const found = localCourses.find(
+      (c) => String(c.id) === String(id)
+    );
 
-        if (response.ok && data.success && data.course) {
-          setCourse(data.course);
-        } else {
-          navigate("/courses");
-        }
-      } catch (error) {
-        console.error("خطا در دریافت دوره:", error);
-        navigate("/courses");
-      }
-    };
-
-    loadCourse();
+    if (found) {
+      setCourse(found);
+    } else {
+      navigate("/courses");
+    }
 
     const savedMy = localStorage.getItem("mohandesino_my_courses");
 
@@ -36,21 +29,6 @@ function Course() {
       setIsPurchased(my.some(c => String(c.id) === String(id)));
     }
   }, [id, navigate]);
-
-  const handlePurchase = () => {
-    if (!course) return;
-
-    if (course.isFree || Number(course.price) === 0) {
-      const updated = [...myCourses, course];
-      localStorage.setItem("mohandesino_my_courses", JSON.stringify(updated));
-      setMyCourses(updated);
-      setIsPurchased(true);
-      alert("🎁 دوره رایگان به دوره‌های من اضافه شد!");
-      return;
-    }
-
-    navigate(`/checkout/${course.id}`);
-  };
 
   if (!course) {
     return (
