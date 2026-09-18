@@ -79,6 +79,9 @@ function Footer() {
           )}
         </div>
 
+        <div className="enamad-badge-pro" style={{ marginTop: "20px", textAlign: "center" }}>
+          <a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=7807180&Code=EZcgaxTS3qo9STFe3af4zPosDmfy9RqU'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=7807180&Code=EZcgaxTS3qo9STFe3af4zPosDmfy9RqU' alt='' style={{ cursor: 'pointer' }} code='EZcgaxTS3qo9STFe3af4zPosDmfy9RqU' /></a>
+        </div>
         <div className="footer-contact-pro">
           <h4>اطلاعات تماس</h4>
           {settings.phone && <p>📞 {settings.phone}</p>}
