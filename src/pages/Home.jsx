@@ -151,37 +151,6 @@ function Home() {
         </div>
       </section>
 
-      {/* ===== PAID COURSES ===== */}
-      <section className="page-container">
-        <div className="section-title-row">
-          <div className="section-title">
-            <h2>💎 دوره‌های ویژه</h2>
-            <p>دوره‌های تخصصی با مدرک معتبر</p>
-          </div>
-          <Link to="/courses" className="view-all">مشاهده همه ←</Link>
-        </div>
-        <div className="course-grid">
-          {paidCourses.slice(0, 3).map(item => (
-            <div className="home-course-card paid" key={item.id}>
-              <div className="course-thumbnail">
-                <span className="course-thumbnail-icon">💎</span>
-                <span className="paid-badge">پولی</span>
-              </div>
-              <div className="course-card-body">
-                <span className="course-category">{item.category}</span>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                <div className="course-card-bottom">
-                  <span>{item.level}</span>
-                  <strong>{Number(item.price).toLocaleString()} تومان</strong>
-                </div>
-                <Link to={`/course/${item.id}`} className="course-view-button">مشاهده دوره ←</Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ===== WHY US ===== */}
       <section className="why-section">
         <div className="page-container">
