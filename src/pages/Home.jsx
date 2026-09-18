@@ -73,8 +73,8 @@ function Home() {
     }
   }, []);
 
-  const freeCourses = courses.filter(c => c.isFree === true || Number(c.price) === 0);
-  const paidCourses = courses.filter(c => c.isFree === false && Number(c.price) > 0);
+  const freeCourses = [];
+  const paidCourses = [];
 
   return (
     <>
