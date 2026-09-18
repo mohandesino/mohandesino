@@ -58,42 +58,87 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>ورود به حساب</h1>
-        <p>به مهندسینو خوش آمدید</p>
+    <main className="auth-page-modern" dir="rtl">
+      <div className="auth-wrapper">
 
-        <form onSubmit={handleLogin}>
-          <input
-            type="tel"
-            placeholder="شماره موبایل"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            dir="ltr"
-            autoComplete="tel"
-          />
+        <div className="auth-brand">
+          <div className="auth-brand-icon">🎓</div>
+          <h2>مهندسینو</h2>
+          <p>آموزش ریاضی و فیزیک به زبان ساده و مفهومی</p>
+        </div>
 
-          <input
-            type="password"
-            placeholder="رمز عبور"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            dir="ltr"
-            autoComplete="current-password"
-          />
+        <div className="auth-card-modern">
 
-          {error && <div className="auth-error">{error}</div>}
+          <div className="auth-card-header">
+            <div className="auth-card-icon">🔐</div>
+            <h1>ورود به حساب</h1>
+            <p>برای ادامه وارد حساب کاربری خود شوید</p>
+          </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "در حال ورود..." : "ورود"}
-          </button>
-        </form>
+          <form onSubmit={handleLogin} className="auth-form-modern">
 
-        <p>
-          حساب کاربری ندارید؟{" "}
-          <Link to="/signup">ثبت‌نام کنید</Link>
-        </p>
+            <div className="auth-input-group">
+              <label>📱 شماره موبایل</label>
+              <input
+                type="tel"
+                placeholder="مثلاً 09123456789"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                dir="ltr"
+                autoComplete="tel"
+              />
+            </div>
+
+            <div className="auth-input-group">
+              <label>🔑 رمز عبور</label>
+              <input
+                type="password"
+                placeholder="رمز عبور خود را وارد کنید"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                dir="ltr"
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && (
+              <div className="auth-error-box">
+                ⚠️ {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="auth-spinner"></span>
+                  در حال ورود...
+                </>
+              ) : (
+                "ورود به حساب"
+              )}
+            </button>
+          </form>
+
+          <div className="auth-divider-line">
+            <span>یا</span>
+          </div>
+
+          <div className="auth-footer-text">
+            <p>
+              حساب کاربری ندارید؟{" "}
+              <Link to="/signup" className="auth-footer-link">
+                ثبت‌نام کنید
+              </Link>
+            </p>
+          </div>
+
+        </div>
+
       </div>
-    </div>
+    </main>
   );
 }

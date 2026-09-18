@@ -25,6 +25,11 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
+    if (!form.name.trim()) {
+      setError("نام و نام خانوادگی را وارد کنید");
+      return;
+    }
+
     if (!/^09\d{9}$/.test(form.phone.trim())) {
       setError("شماره موبایل معتبر نیست");
       return;
@@ -49,8 +54,8 @@ export default function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: form.name,
-          phone: form.phone,
+          name: form.name.trim(),
+          phone: form.phone.trim(),
           password: form.password,
         }),
       });
@@ -73,59 +78,114 @@ export default function Signup() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>ایجاد حساب</h1>
-        <p>در مهندسینو حساب کاربری بسازید</p>
+    <main className="auth-page-modern" dir="rtl">
+      <div className="auth-wrapper">
 
-        <form onSubmit={handleSignup}>
-          <input
-            type="text"
-            name="name"
-            placeholder="نام و نام خانوادگی"
-            value={form.name}
-            onChange={handleChange}
-          />
+        <div className="auth-brand">
+          <div className="auth-brand-icon">🎓</div>
+          <h2>مهندسینو</h2>
+          <p>آموزش ریاضی و فیزیک به زبان ساده و مفهومی</p>
+        </div>
 
-          <input
-            type="tel"
-            name="phone"
-            placeholder="شماره موبایل"
-            value={form.phone}
-            onChange={handleChange}
-            dir="ltr"
-          />
+        <div className="auth-card-modern">
 
-          <input
-            type="password"
-            name="password"
-            placeholder="رمز عبور"
-            value={form.password}
-            onChange={handleChange}
-            dir="ltr"
-          />
+          <div className="auth-card-header">
+            <div className="auth-card-icon">✨</div>
+            <h1>ایجاد حساب کاربری</h1>
+            <p>برای شروع یادگیری، حساب خود را بسازید</p>
+          </div>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="تکرار رمز عبور"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            dir="ltr"
-          />
+          <form onSubmit={handleSignup} className="auth-form-modern">
 
-          {error && <div className="auth-error">{error}</div>}
+            <div className="auth-input-group">
+              <label>👤 نام و نام خانوادگی</label>
+              <input
+                type="text"
+                name="name"
+                placeholder="نام و نام خانوادگی"
+                value={form.name}
+                onChange={handleChange}
+                autoComplete="name"
+              />
+            </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "در حال ثبت‌نام..." : "ثبت‌نام"}
-          </button>
-        </form>
+            <div className="auth-input-group">
+              <label>📱 شماره موبایل</label>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="مثلاً 09123456789"
+                value={form.phone}
+                onChange={handleChange}
+                dir="ltr"
+                autoComplete="tel"
+              />
+            </div>
 
-        <p>
-          قبلاً حساب دارید؟{" "}
-          <Link to="/login">ورود به حساب</Link>
-        </p>
+            <div className="auth-input-group">
+              <label>🔑 رمز عبور</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="حداقل ۶ کاراکتر"
+                value={form.password}
+                onChange={handleChange}
+                dir="ltr"
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div className="auth-input-group">
+              <label>🔐 تکرار رمز عبور</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="رمز عبور را دوباره وارد کنید"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                dir="ltr"
+                autoComplete="new-password"
+              />
+            </div>
+
+            {error && (
+              <div className="auth-error-box">
+                ⚠️ {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="auth-spinner"></span>
+                  در حال ثبت‌نام...
+                </>
+              ) : (
+                "ایجاد حساب"
+              )}
+            </button>
+          </form>
+
+          <div className="auth-divider-line">
+            <span>یا</span>
+          </div>
+
+          <div className="auth-footer-text">
+            <p>
+              قبلاً حساب دارید؟{" "}
+              <Link to="/login" className="auth-footer-link">
+                وارد شوید
+              </Link>
+            </p>
+          </div>
+
+        </div>
+
       </div>
-    </div>
+    </main>
   );
 }
