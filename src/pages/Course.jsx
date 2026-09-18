@@ -33,6 +33,15 @@ function Course() {
   const handlePurchase = () => {
     if (!course) return;
 
+    const token = localStorage.getItem("auth_token");
+    const currentUser = localStorage.getItem("currentUser");
+
+    if (!token || !currentUser) {
+      alert("🔐 ابتدا وارد حساب کاربری خود شوید.");
+      navigate("/login");
+      return;
+    }
+
     if (course.isFree || Number(course.price) === 0) {
       const updated = [
         ...myCourses.filter((c) => String(c.id) !== String(course.id)),

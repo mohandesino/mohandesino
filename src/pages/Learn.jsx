@@ -10,6 +10,15 @@ function Learn() {
   const [currentLesson, setCurrentLesson] = useState(0);
 
   useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    const currentUser = localStorage.getItem("currentUser");
+
+    if (!token || !currentUser) {
+      alert("🔐 ابتدا وارد حساب کاربری خود شوید.");
+      navigate("/login");
+      return;
+    }
+
     const saved = localStorage.getItem("mohandesino_courses");
     const savedProgress = localStorage.getItem(`mohandesino_progress_${id}`);
 
