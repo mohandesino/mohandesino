@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 
 function Header() {
@@ -9,7 +9,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [settings, setSettings] = useState({
+  const menuRef = useRef(null);\n  const profileRef = useRef(null);\n\n  const [settings, setSettings] = useState({
     siteTitle: "مهندسینو",
     showFaq: true, // ===== جدید: نمایش یا مخفی کردن FAQ
   });
@@ -54,7 +54,7 @@ function Header() {
           <span className="logo-icon">{settings.siteTitle || "مهندسینو"}</span>
         </Link>
 
-        <nav className={`header-nav ${menuOpen ? "open" : ""}`}>
+        <nav ref={menuRef} className={`header-nav ${menuOpen ? "open" : ""}`}>
           <Link to="/" className={isActive("/")} onClick={closeMenu}>خانه</Link>
           <Link to="/courses" className={isActive("/courses")} onClick={closeMenu}>دوره‌ها</Link>
           <Link to="/my-courses" className={isActive("/my-courses")} onClick={closeMenu}>دوره‌های من</Link>
@@ -85,7 +85,7 @@ function Header() {
           </button>
 
           {user ? (
-            <div className="profile-wrapper">
+            <div ref={profileRef} className="profile-wrapper">
               <button className="profile-btn" onClick={toggleProfile} type="button">
                 <span className="profile-avatar">{user.name?.[0] || "👤"}</span>
                 <span className="profile-name">{user.name || "کاربر"}</span>
