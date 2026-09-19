@@ -9,7 +9,10 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const menuRef = useRef(null);\n  const profileRef = useRef(null);\n\n  const [settings, setSettings] = useState({
+  const menuRef = useRef(null);
+  const profileRef = useRef(null);
+
+  const [settings, setSettings] = useState({
     siteTitle: "مهندسینو",
     showFaq: true, // ===== جدید: نمایش یا مخفی کردن FAQ
   });
