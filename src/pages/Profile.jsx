@@ -11,7 +11,7 @@ function Profile() {
   const [editName, setEditName] = useState("");
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("mohandesino_user");
+    const savedUser = localStorage.getItem("currentUser");
     const savedMy = localStorage.getItem("mohandesino_my_courses");
 
     if (savedUser) {
@@ -28,14 +28,15 @@ function Profile() {
   const handleSaveName = () => {
     if (user) {
       const updatedUser = { ...user, name: editName };
-      localStorage.setItem("mohandesino_user", JSON.stringify(updatedUser));
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
       setUser(updatedUser);
       setIsEditing(false);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("mohandesino_user");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("auth_token");
     navigate("/");
     window.location.reload();
   };

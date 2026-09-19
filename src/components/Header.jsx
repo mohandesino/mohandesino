@@ -15,7 +15,7 @@ function Header() {
   });
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("mohandesino_user");
+    const savedUser = localStorage.getItem("currentUser");
     if (savedUser) setUser(JSON.parse(savedUser));
 
     const savedSettings = localStorage.getItem("mohandesino_settings");
@@ -34,7 +34,8 @@ function Header() {
   const toggleProfile = () => setProfileOpen(!profileOpen);
 
   const handleLogout = () => {
-    localStorage.removeItem("mohandesino_user");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("auth_token");
     setUser(null);
     setProfileOpen(false);
     navigate("/");
