@@ -67,7 +67,7 @@ function Header() {
             <Link to="/faq" className={isActive("/faq")} onClick={closeMenu}>❓ سوالات متداول</Link>
           )}
 
-          {user?.isAdmin && (
+          {user?.is_admin && (
             <Link to="/admin" className={isActive("/admin")} onClick={closeMenu}>مدیریت</Link>
           )}
         </nav>
