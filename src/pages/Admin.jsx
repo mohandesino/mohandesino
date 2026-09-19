@@ -67,7 +67,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     setError("");
 
     const userData = JSON.parse(
-      localStorage.getItem("mohandesino_user") || "{}"
+      localStorage.getItem("currentUser") || "{}"
     );
 
     if (!userData.phone) {
