@@ -66,35 +66,28 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     e.preventDefault();
     setError("");
 
-    const userData = JSON.parse(
-      localStorage.getItem("currentUser") || "{}"
-    );
+    const token = localStorage.getItem("auth_token");
 
-    if (!userData.phone) {
+    if (!token) {
       setError("ابتدا وارد حساب کاربری شوید.");
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/admin/login`, {
-        method: "POST",
+      const res = await fetch(`${API_BASE}/api/admin/me`, {
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          phone: userData.phone,
-          password,
-        }),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "شماره موبایل یا رمز عبور اشتباه است");
+        setError(data.message || "دسترسی مدیریت ندارید");
         return;
       }
 
-      localStorage.setItem("mohandesino_admin_token", data.token);
+      localStorage.setItem("mohandesino_admin_token", token);
       setIsLoggedIn(true);
       setPassword("");
     } catch (err) {
