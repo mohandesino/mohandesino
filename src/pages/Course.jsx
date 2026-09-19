@@ -1,7 +1,7 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import CourseComments from "../components/CourseComments";
-import { courses as localCourses } from "../data/courses.js";
+import { API_BASE } from "../config.js";
 
 function Course() {
   const { id } = useParams();
@@ -11,23 +11,31 @@ function Course() {
   const [isPurchased, setIsPurchased] = useState(false);
 
   useEffect(() => {
-    const found = localCourses.find(
-      (c) => String(c.id) === String(id)
-    );
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/courses/${id}/full`);
+        const data = await response.json();
 
-    if (found) {
-      setCourse(found);
-    } else {
-      navigate("/courses");
-    }
+        if (!response.ok || !data.success || !data.course) {
+          navigate("/courses");
+          return;
+        }
 
-    const savedMy = localStorage.getItem("mohandesino_my_courses");
+        setCourse(data.course);
 
-    if (savedMy) {
-      const my = JSON.parse(savedMy);
-      setMyCourses(my);
-      setIsPurchased(my.some(c => String(c.id) === String(id)));
-    }
+        const savedMy = localStorage.getItem("mohandesino_my_courses");
+        if (savedMy) {
+          const my = JSON.parse(savedMy);
+          setMyCourses(my);
+          setIsPurchased(my.some(c => String(c.id) === String(id)));
+        }
+      } catch (error) {
+        console.error("خطا در دریافت دوره:", error);
+        navigate("/courses");
+      }
+    };
+
+    loadCourse();
   }, [id, navigate]);
 
   const handlePurchase = () => {
