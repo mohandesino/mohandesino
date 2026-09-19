@@ -77,7 +77,7 @@ export default function Signup() {
       }
 
       localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("currentUser", JSON.stringify(data.user));
+      localStorage.setItem("currentUser", JSON.stringify({ ...data.user, isAdmin: data.user.is_admin }));
 
       navigate("/");
     } catch (err) {
