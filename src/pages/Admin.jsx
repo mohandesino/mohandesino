@@ -118,7 +118,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
   };
 
   useEffect(() => {
-    fetch("${API_BASE}/api/courses")
+    fetch(`${API_BASE}/api/courses`)
       .then(res => res.json())
       .then(async data => {
         const list = data.courses || [];
@@ -234,7 +234,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!course.id) { alert("اول دوره را ذخیره کنید، سپس فصل اضافه کنید."); return; }
 
     try {
-      const response = await adminFetch("${API_BASE}/api/chapters", {
+      const response = await adminFetch(`${API_BASE}/api/chapters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -337,7 +337,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       const chapter = course.chapters?.find(ch => ch.id === activeChapter);
       if (!chapter) { alert("فصل پیدا نشد."); return; }
 
-      const response = await adminFetch("${API_BASE}/api/lessons", {
+      const response = await adminFetch(`${API_BASE}/api/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -495,7 +495,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         });
         if (!response.ok) throw new Error("خطا در ویرایش دوره");
       } else {
-        const response = await adminFetch("${API_BASE}/api/courses", {
+        const response = await adminFetch(`${API_BASE}/api/courses`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -516,7 +516,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         chapters: fullData.course?.chapters || []
       });
 
-      const listResponse = await fetch("${API_BASE}/api/courses");
+      const listResponse = await fetch(`${API_BASE}/api/courses`);
       const listData = await listResponse.json();
       const fullCourses = await Promise.all((listData.courses || []).map(async item => {
         const r = await fetch(`${API_BASE}/api/courses/${item.id}/full`);
