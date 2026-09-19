@@ -75,9 +75,14 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
 
     try {
       const res = await fetch(`${API_BASE}/api/admin/me`, {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          admin_password: password,
+        }),
       });
 
       const data = await res.json();
