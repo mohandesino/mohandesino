@@ -27,6 +27,11 @@ function Header() {
     }
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
+
   const isActive = (path) => location.pathname === path ? "active" : "";
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
