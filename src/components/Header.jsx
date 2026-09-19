@@ -16,7 +16,13 @@ function Header() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      setUser({
+        ...parsed,
+        isAdmin: parsed.isAdmin ?? Boolean(Number(parsed.is_admin)),
+      });
+    }
 
     const savedSettings = localStorage.getItem("mohandesino_settings");
     if (savedSettings) {
