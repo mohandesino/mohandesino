@@ -1,785 +1,1165 @@
-import { useEffect, useState } from "react";
-import { API_BASE } from "../config.js";
+import React, { useEffect, useState } from "react";
+import { API_BASE } from "../config";
 import "../admin-new.css";
 
+const TOKEN_KEY = "mohandesino_admin_token";
+const USER_KEY = "mohandesino_admin_user";
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || "";
+}
+
+function getSavedUser() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function formatPrice(value) {
+  return Number(value || 0).toLocaleString("fa-IR");
+}
+
 function AdminNew() {
-  const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [token, setToken] = useState(getToken());
+  const [admin, setAdmin] = useState(getSavedUser());
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const [section, setSection] = useState("dashboard");
+
+  const [dashboard, setDashboard] = useState(null);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [courseLoading, setCourseLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showChapterForm, setShowChapterForm] = useState(false);
-  const [chapterTitle, setChapterTitle] = useState("");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-  const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseForm, setCourseForm] = useState({
     title: "",
-    category: "",
+    category: "سایر",
     level: "مقدماتی",
     price: "",
+    is_free: true,
     image: "",
     description: "",
-    is_free: true,
   });
 
-  useEffect(() => {
-    loadCourses();
-  }, []);
+  const [editingCourseId, setEditingCourseId] = useState(null);
 
-  const loadCourses = async () => {
+  const [chapterTitle, setChapterTitle] = useState("");
+  const [editingChapterId, setEditingChapterId] = useState(null);
+
+  const [lessonForm, setLessonForm] = useState({
+    chapter_id: "",
+    title: "",
+    video: "",
+    free: false,
+    duration: "",
+    description: "",
+  });
+
+  const [editingLessonId, setEditingLessonId] = useState(null);
+
+  const authHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  });
+
+  const logout = async () => {
     try {
-      setLoading(true);
-      setError("");
+      if (token) {
+        await fetch(`${API_BASE}/api/admin/logout`, {
+          method: "POST",
+          headers: authHeaders(),
+        });
+      }
+    } catch {}
 
-      const response = await fetch(`${API_BASE}/api/courses`);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setToken("");
+    setAdmin(null);
+    setSelectedCourse(null);
+    setSection("dashboard");
+  };
+
+  const api = async (url, options = {}) => {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      await logout();
+      throw new Error("جلسه مدیریت منقضی شده است.");
+    }
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || "خطا در ارتباط با سرور");
+    }
+
+    return data;
+  };
+
+  const login = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: loginPhone.trim(),
+          password: loginPassword,
+        }),
+      });
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "خطا در دریافت دوره‌ها");
+        throw new Error(data?.error || "ورود ناموفق بود");
       }
 
-      setCourses(data.courses || []);
-    } catch (err) {
-      setError(err.message || "خطا در دریافت اطلاعات");
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+
+      setToken(data.token);
+      setAdmin(data.user);
+      setLoginPassword("");
+      setMessage("ورود با موفقیت انجام شد.");
+    } catch (error) {
+      setMessage(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const loadDashboard = async () => {
+    try {
+      const data = await api(`${API_BASE}/api/admin/dashboard`);
+      setDashboard(data);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
+  const loadCourses = async () => {
+    try {
+      const data = await api(`${API_BASE}/api/admin/courses`);
+      setCourses(data.courses || []);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const openCourse = async (courseId) => {
+    setLoading(true);
+
     try {
-      setCourseLoading(true);
-      setError("");
-
-      const response = await fetch(
-        `${API_BASE}/api/courses/${courseId}/full`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "خطا در دریافت دوره");
-      }
-
-      setSelectedCourse({
-        ...data.course,
-        chapters: data.chapters || [],
-      });
-    } catch (err) {
-      setError(err.message || "خطا در دریافت دوره");
+      const data = await api(`${API_BASE}/api/courses/${courseId}/full`);
+      setSelectedCourse(data);
+      setSection("courses");
+    } catch (error) {
+      setMessage(error.message);
     } finally {
-      setCourseLoading(false);
+      setLoading(false);
     }
   };
 
-  const closeCourse = () => {
+  const resetCourseForm = () => {
+    setCourseForm({
+      title: "",
+      category: "سایر",
+      level: "مقدماتی",
+      price: "",
+      is_free: true,
+      image: "",
+      description: "",
+    });
+    setEditingCourseId(null);
+  };
+
+  const editCourse = (course) => {
+    setCourseForm({
+      title: course.title || "",
+      category: course.category || "سایر",
+      level: course.level || "مقدماتی",
+      price: course.price || "",
+      is_free: Boolean(course.is_free),
+      image: course.image || "",
+      description: course.description || "",
+    });
+
+    setEditingCourseId(course.id);
     setSelectedCourse(null);
-    setError("");
+    setSection("courses");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const createCourse = async () => {
+  const saveCourse = async () => {
     if (!courseForm.title.trim()) {
-      setError("عنوان دوره را وارد کنید.");
+      setMessage("نام دوره را وارد کنید.");
       return;
     }
 
-    if (!courseForm.is_free && (!courseForm.price || Number(courseForm.price) <= 0)) {
-      setError("برای دوره پولی، قیمت معتبر وارد کنید.");
-      return;
-    }
+    setLoading(true);
+    setMessage("");
 
     try {
-      setError("");
+      const body = {
+        title: courseForm.title.trim(),
+        category: courseForm.category,
+        level: courseForm.level,
+        price: Number(courseForm.price || 0),
+        is_free: courseForm.is_free ? 1 : 0,
+        image: courseForm.image.trim(),
+        description: courseForm.description.trim(),
+      };
 
-      const response = await fetch(`${API_BASE}/api/admin/courses`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: courseForm.title.trim(),
-          category: courseForm.category.trim(),
-          level: courseForm.level,
-          price: courseForm.is_free ? 0 : Number(courseForm.price),
-          is_free: courseForm.is_free ? 1 : 0,
-          image: courseForm.image.trim(),
-          description: courseForm.description.trim(),
-        }),
-      });
+      if (editingCourseId) {
+        await api(`${API_BASE}/api/admin/courses/${editingCourseId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
 
-      const data = await response.json();
+        setMessage("دوره با موفقیت ویرایش شد.");
+      } else {
+        await api(`${API_BASE}/api/admin/courses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "ایجاد دوره انجام نشد.");
+        setMessage("دوره جدید ایجاد شد.");
       }
 
-      setCourseForm({
-        title: "",
-        category: "",
-        level: "مقدماتی",
-        price: "",
-        image: "",
-        description: "",
-        is_free: true,
-      });
-
-      setShowCourseForm(false);
+      resetCourseForm();
       await loadCourses();
-    } catch (err) {
-      setError(err.message || "خطا در ایجاد دوره");
+      await loadDashboard();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const addChapter = async () => {
-    if (!selectedCourse?.id) {
-      setError("دوره‌ای برای افزودن فصل انتخاب نشده است.");
+  const deleteCourse = async (courseId) => {
+    if (!window.confirm("این دوره و تمام فصل‌ها و درس‌های آن حذف می‌شوند. ادامه می‌دهید؟")) {
       return;
     }
+
+    setLoading(true);
+
+    try {
+      await api(`${API_BASE}/api/admin/courses/${courseId}`, {
+        method: "DELETE",
+      });
+
+      if (selectedCourse?.id === courseId) {
+        setSelectedCourse(null);
+      }
+
+      setMessage("دوره حذف شد.");
+      await loadCourses();
+      await loadDashboard();
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveChapter = async () => {
+    if (!selectedCourse) return;
 
     if (!chapterTitle.trim()) {
-      setError("عنوان فصل را وارد کنید.");
+      setMessage("نام فصل را وارد کنید.");
       return;
     }
 
+    setLoading(true);
+
     try {
-      setError("");
+      if (editingChapterId) {
+        await api(`${API_BASE}/api/chapters/${editingChapterId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: chapterTitle.trim(),
+          }),
+        });
 
-      const response = await fetch(`${API_BASE}/api/chapters`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          course_id: selectedCourse.id,
-          title: chapterTitle.trim(),
-          sort_order: (selectedCourse.chapters?.length || 0) + 1,
-        }),
-      });
+        setMessage("فصل ویرایش شد.");
+      } else {
+        await api(`${API_BASE}/api/chapters`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            course_id: selectedCourse.id,
+            title: chapterTitle.trim(),
+          }),
+        });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "ذخیره فصل انجام نشد.");
+        setMessage("فصل اضافه شد.");
       }
 
       setChapterTitle("");
-      setShowChapterForm(false);
-
+      setEditingChapterId(null);
       await openCourse(selectedCourse.id);
-    } catch (err) {
-      setError(err.message || "خطا در ذخیره فصل");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const menuTitle = {
-    dashboard: "داشبورد",
-    courses: "دوره‌ها",
-    users: "کاربران",
-    orders: "سفارش‌ها",
-    settings: "تنظیمات",
+  const editChapter = (chapter) => {
+    setChapterTitle(chapter.title || "");
+    setEditingChapterId(chapter.id);
   };
 
+  const deleteChapter = async (chapterId) => {
+    if (!window.confirm("این فصل و درس‌های آن حذف می‌شوند. ادامه می‌دهید؟")) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await api(`${API_BASE}/api/chapters/${chapterId}`, {
+        method: "DELETE",
+      });
+
+      setMessage("فصل حذف شد.");
+      await openCourse(selectedCourse.id);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetLessonForm = () => {
+    setLessonForm({
+      chapter_id: "",
+      title: "",
+      video: "",
+      free: false,
+      duration: "",
+      description: "",
+    });
+    setEditingLessonId(null);
+  };
+
+  const editLesson = (lesson, chapterId) => {
+    setLessonForm({
+      chapter_id: chapterId,
+      title: lesson.title || "",
+      video: lesson.video || "",
+      free: Boolean(lesson.free),
+      duration: lesson.duration || "",
+      description: lesson.description || "",
+    });
+
+    setEditingLessonId(lesson.id);
+  };
+
+  const saveLesson = async () => {
+    if (!lessonForm.chapter_id) {
+      setMessage("فصل درس را انتخاب کنید.");
+      return;
+    }
+
+    if (!lessonForm.title.trim()) {
+      setMessage("نام درس را وارد کنید.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const body = {
+        chapter_id: Number(lessonForm.chapter_id),
+        title: lessonForm.title.trim(),
+        video: lessonForm.video.trim(),
+        free: lessonForm.free ? 1 : 0,
+        duration: lessonForm.duration.trim(),
+        description: lessonForm.description.trim(),
+      };
+
+      if (editingLessonId) {
+        await api(`${API_BASE}/api/lessons/${editingLessonId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+
+        setMessage("درس ویرایش شد.");
+      } else {
+        await api(`${API_BASE}/api/lessons`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        });
+
+        setMessage("درس اضافه شد.");
+      }
+
+      resetLessonForm();
+      await openCourse(selectedCourse.id);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteLesson = async (lessonId) => {
+    if (!window.confirm("این درس حذف شود؟")) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await api(`${API_BASE}/api/lessons/${lessonId}`, {
+        method: "DELETE",
+      });
+
+      setMessage("درس حذف شد.");
+      await openCourse(selectedCourse.id);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+
+    loadDashboard();
+    loadCourses();
+  }, [token]);
+
+  if (!token) {
+    return (
+      <div className="admin-new-page">
+        <div className="admin-new-login">
+          <div className="admin-new-login-logo">مهندسینو</div>
+
+          <h1>ورود مدیریت</h1>
+          <p>برای ورود به پنل مدیریت اطلاعات مدیر را وارد کنید.</p>
+
+          <form onSubmit={login}>
+            <label>شماره موبایل</label>
+            <input
+              type="tel"
+              dir="ltr"
+              placeholder="09123456789"
+              value={loginPhone}
+              onChange={(e) => setLoginPhone(e.target.value)}
+            />
+
+            <label>رمز عبور</label>
+            <input
+              type="password"
+              dir="ltr"
+              placeholder="رمز عبور"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+            />
+
+            {message && <div className="admin-new-message">{message}</div>}
+
+            <button type="submit" disabled={loading}>
+              {loading ? "در حال ورود..." : "ورود به پنل"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <main className="admin-new-page" dir="rtl">
+    <div className="admin-new-page" dir="rtl">
       <aside className="admin-new-sidebar">
         <div className="admin-new-brand">
-          <div className="admin-new-logo">🎓</div>
-
-          <div>
-            <strong>مهندسینو</strong>
-            <span>پنل مدیریت</span>
-          </div>
+          <strong>مهندسینو</strong>
+          <span>پنل مدیریت</span>
         </div>
 
-        <nav className="admin-new-nav">
-          {[
-            ["dashboard", "📊 داشبورد"],
-            ["courses", "📚 دوره‌ها"],
-            ["users", "👤 کاربران"],
-            ["orders", "🛒 سفارش‌ها"],
-            ["settings", "⚙️ تنظیمات"],
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              className={activeMenu === key ? "active" : ""}
-              onClick={() => {
-                setActiveMenu(key);
-                setSelectedCourse(null);
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        <nav>
+          <button
+            className={section === "dashboard" ? "active" : ""}
+            onClick={() => {
+              setSection("dashboard");
+              setSelectedCourse(null);
+              loadDashboard();
+            }}
+          >
+            داشبورد
+          </button>
+
+          <button
+            className={section === "courses" ? "active" : ""}
+            onClick={() => {
+              setSection("courses");
+              setSelectedCourse(null);
+              loadCourses();
+            }}
+          >
+            دوره‌ها
+          </button>
+
+          <button
+            className={section === "users" ? "active" : ""}
+            onClick={() => setSection("users")}
+          >
+            کاربران
+          </button>
+
+          <button
+            className={section === "orders" ? "active" : ""}
+            onClick={() => setSection("orders")}
+          >
+            سفارش‌ها
+          </button>
         </nav>
+
+        <div className="admin-new-sidebar-bottom">
+          <div className="admin-new-admin-name">
+            {admin?.name || "مدیر"}
+          </div>
+
+          <button onClick={logout}>خروج</button>
+        </div>
       </aside>
 
-      <section className="admin-new-content">
-        <header className="admin-new-topbar">
+      <main className="admin-new-main">
+        <header className="admin-new-header">
           <div>
-            <span>پنل مدیریت</span>
             <h1>
-              {selectedCourse
-                ? selectedCourse.title
-                : menuTitle[activeMenu]}
+              {section === "dashboard" && "داشبورد"}
+              {section === "courses" && "مدیریت دوره‌ها"}
+              {section === "users" && "کاربران"}
+              {section === "orders" && "سفارش‌ها"}
             </h1>
+
+            <span>مدیریت محتوای مهندسینو</span>
           </div>
 
-          <div className="admin-new-user">
-            <span>مدیر مهندسینو</span>
-            <div>👤</div>
-          </div>
+          {loading && <div className="admin-new-loading">در حال پردازش...</div>}
         </header>
 
-        <div className="admin-new-body">
+        {message && (
+          <div className="admin-new-message admin-new-message-top">
+            {message}
+            <button onClick={() => setMessage("")}>×</button>
+          </div>
+        )}
 
-          {error && (
-            <div className="admin-new-error">
-              ❌ {error}
+        {section === "dashboard" && (
+          <section className="admin-new-section">
+            <div className="admin-new-stats">
+              <div className="admin-new-stat">
+                <span>دوره‌ها</span>
+                <strong>{dashboard?.courses ?? "—"}</strong>
+              </div>
+
+              <div className="admin-new-stat">
+                <span>کاربران</span>
+                <strong>{dashboard?.users ?? "—"}</strong>
+              </div>
+
+              <div className="admin-new-stat">
+                <span>سفارش‌ها</span>
+                <strong>{dashboard?.orders ?? "—"}</strong>
+              </div>
+
+              <div className="admin-new-stat">
+                <span>فروش</span>
+                <strong>
+                  {dashboard?.sales != null
+                    ? `${formatPrice(dashboard.sales)} تومان`
+                    : "—"}
+                </strong>
+              </div>
             </div>
-          )}
 
-          {/* ================= دوره انتخاب شده ================= */}
-
-          {selectedCourse ? (
-            <div className="admin-new-panel">
-
-              <div className="admin-new-panel-header">
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
                 <div>
-                  <span>مدیریت دوره</span>
-                  <h2>{selectedCourse.title}</h2>
+                  <h2>دسترسی سریع</h2>
+                  <p>مدیریت محتوای آموزشی از همین بخش انجام می‌شود.</p>
                 </div>
 
                 <button
-                  type="button"
-                  className="admin-new-secondary-btn"
-                  onClick={closeCourse}
+                  className="admin-new-primary"
+                  onClick={() => setSection("courses")}
                 >
-                  ← بازگشت به دوره‌ها
+                  مدیریت دوره‌ها
                 </button>
               </div>
+            </div>
+          </section>
+        )}
 
-              <div className="admin-new-course-detail">
-
-                <div className="admin-new-detail-card">
-                  <span>دسته‌بندی</span>
-                  <strong>
-                    {selectedCourse.category || "بدون دسته‌بندی"}
-                  </strong>
+        {section === "courses" && !selectedCourse && (
+          <section className="admin-new-section">
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <h2>{editingCourseId ? "ویرایش دوره" : "ایجاد دوره جدید"}</h2>
+                  <p>
+                    اطلاعات اصلی دوره را وارد کنید.
+                  </p>
                 </div>
 
-                <div className="admin-new-detail-card">
-                  <span>سطح</span>
-                  <strong>
-                    {selectedCourse.level || "نامشخص"}
-                  </strong>
-                </div>
-
-                <div className="admin-new-detail-card">
-                  <span>وضعیت</span>
-                  <strong>
-                    {Boolean(selectedCourse.is_free)
-                      ? "رایگان"
-                      : "دوره پولی"}
-                  </strong>
-                </div>
-
-                <div className="admin-new-detail-card">
-                  <span>تعداد فصل‌ها</span>
-                  <strong>
-                    {selectedCourse.chapters?.length || 0}
-                  </strong>
-                </div>
-
-              </div>
-
-              <div className="admin-new-course-description">
-                <span>توضیحات دوره</span>
-                <p>
-                  {selectedCourse.description ||
-                    "برای این دوره توضیحاتی ثبت نشده است."}
-                </p>
-              </div>
-
-              <div className="admin-new-content-section">
-
-                <div className="admin-new-content-section-header">
-                  <div>
-                    <span>ساختار آموزشی</span>
-                    <h3>فصل‌ها و درس‌ها</h3>
-                  </div>
-
+                {editingCourseId && (
                   <button
-                    type="button"
-                    className="admin-new-primary-btn"
-                    onClick={() => setShowChapterForm((value) => !value)}
+                    className="admin-new-secondary"
+                    onClick={resetCourseForm}
                   >
-                    {showChapterForm ? "بستن فرم" : "+ افزودن فصل"}
+                    لغو ویرایش
                   </button>
+                )}
+              </div>
+
+              <div className="admin-new-form-grid">
+                <div>
+                  <label>عنوان دوره</label>
+                  <input
+                    value={courseForm.title}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        title: e.target.value,
+                      })
+                    }
+                    placeholder="مثلاً ریاضی ۱"
+                  />
                 </div>
 
-                {showChapterForm && (
-                  <div className="admin-new-chapter-form">
-                    <div className="admin-new-form-group">
-                      <label htmlFor="chapter-title">عنوان فصل</label>
-                      <input
-                        id="chapter-title"
-                        type="text"
-                        value={chapterTitle}
-                        onChange={(event) => setChapterTitle(event.target.value)}
-                        placeholder="مثلاً: مفاهیم پایه"
-                      />
-                    </div>
+                <div>
+                  <label>دسته‌بندی</label>
+                  <input
+                    value={courseForm.category}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        category: e.target.value,
+                      })
+                    }
+                    placeholder="مهندسی"
+                  />
+                </div>
 
-                    <div className="admin-new-form-actions">
-                      <button
-                        type="button"
-                        className="admin-new-primary-btn"
-                        onClick={addChapter}
-                      >
-                        ذخیره فصل
-                      </button>
+                <div>
+                  <label>سطح</label>
+                  <select
+                    value={courseForm.level}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        level: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="مقدماتی">مقدماتی</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="پیشرفته">پیشرفته</option>
+                  </select>
+                </div>
 
-                      <button
-                        type="button"
-                        className="admin-new-secondary-btn"
-                        onClick={() => {
-                          setShowChapterForm(false);
-                          setChapterTitle("");
-                        }}
-                      >
-                        انصراف
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div>
+                  <label>قیمت</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={courseForm.price}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        price: e.target.value,
+                      })
+                    }
+                    placeholder="تومان"
+                    disabled={courseForm.is_free}
+                  />
+                </div>
 
-                {courseLoading ? (
-                  <div className="admin-new-empty">
-                    <div>⏳</div>
-                    <h3>در حال دریافت اطلاعات دوره...</h3>
-                  </div>
-                ) : selectedCourse.chapters?.length === 0 ? (
-                  <div className="admin-new-empty">
-                    <div>📖</div>
-                    <h3>هنوز فصلی برای این دوره ایجاد نشده</h3>
-                    <p>
-                      برای شروع، اولین فصل دوره را ایجاد کنید.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="admin-new-chapters">
+                <div className="admin-new-full">
+                  <label>آدرس تصویر</label>
+                  <input
+                    value={courseForm.image}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        image: e.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
 
-                    {selectedCourse.chapters.map((chapter, index) => (
+                <div className="admin-new-full">
+                  <label>توضیحات</label>
+                  <textarea
+                    rows="4"
+                    value={courseForm.description}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="توضیحات کوتاه دوره..."
+                  />
+                </div>
+
+                <label className="admin-new-check">
+                  <input
+                    type="checkbox"
+                    checked={courseForm.is_free}
+                    onChange={(e) =>
+                      setCourseForm({
+                        ...courseForm,
+                        is_free: e.target.checked,
+                      })
+                    }
+                  />
+                  دوره رایگان است
+                </label>
+              </div>
+
+              <button
+                className="admin-new-primary"
+                onClick={saveCourse}
+                disabled={loading}
+              >
+                {editingCourseId ? "ذخیره تغییرات" : "ایجاد دوره"}
+              </button>
+            </div>
+
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <h2>دوره‌ها</h2>
+                  <p>{courses.length} دوره در سیستم</p>
+                </div>
+              </div>
+
+              {courses.length === 0 ? (
+                <div className="admin-new-empty">
+                  هنوز دوره‌ای ثبت نشده است.
+                </div>
+              ) : (
+                <div className="admin-new-course-list">
+                  {courses.map((course) => (
+                    <div className="admin-new-course-row" key={course.id}>
                       <div
-                        className="admin-new-chapter"
-                        key={chapter.id}
+                        className="admin-new-course-main"
+                        onClick={() => openCourse(course.id)}
                       >
-                        <div className="admin-new-chapter-header">
+                        <div className="admin-new-course-icon">📚</div>
 
-                          <div className="admin-new-chapter-title">
-                            <span>
-                              فصل {index + 1}
-                            </span>
+                        <div>
+                          <strong>{course.title}</strong>
+                          <span>
+                            {course.category || "سایر"} ·{" "}
+                            {course.is_free
+                              ? "رایگان"
+                              : `${formatPrice(course.price)} تومان`}
+                          </span>
+                        </div>
+                      </div>
 
-                            <strong>
-                              {chapter.title}
-                            </strong>
-                          </div>
+                      <div className="admin-new-course-actions">
+                        <button
+                          className="admin-new-secondary"
+                          onClick={() => openCourse(course.id)}
+                        >
+                          مدیریت
+                        </button>
 
-                          <div className="admin-new-chapter-meta">
+                        <button
+                          className="admin-new-secondary"
+                          onClick={() => editCourse(course)}
+                        >
+                          ویرایش
+                        </button>
+
+                        <button
+                          className="admin-new-danger"
+                          onClick={() => deleteCourse(course.id)}
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {section === "courses" && selectedCourse && (
+          <section className="admin-new-section">
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <button
+                    className="admin-new-back"
+                    onClick={() => {
+                      setSelectedCourse(null);
+                      resetLessonForm();
+                    }}
+                  >
+                    ← بازگشت به دوره‌ها
+                  </button>
+
+                  <h2>{selectedCourse.title}</h2>
+
+                  <p>
+                    {selectedCourse.category || "سایر"} ·{" "}
+                    {selectedCourse.is_free
+                      ? "رایگان"
+                      : `${formatPrice(selectedCourse.price)} تومان`}
+                  </p>
+                </div>
+
+                <button
+                  className="admin-new-secondary"
+                  onClick={() => {
+                    const course = courses.find(
+                      (item) => item.id === selectedCourse.id
+                    );
+
+                    if (course) editCourse(course);
+                  }}
+                >
+                  ویرایش دوره
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <h2>
+                    {editingChapterId ? "ویرایش فصل" : "افزودن فصل"}
+                  </h2>
+                  <p>فصل‌های دوره را مدیریت کنید.</p>
+                </div>
+
+                {editingChapterId && (
+                  <button
+                    className="admin-new-secondary"
+                    onClick={() => {
+                      setEditingChapterId(null);
+                      setChapterTitle("");
+                    }}
+                  >
+                    لغو
+                  </button>
+                )}
+              </div>
+
+              <div className="admin-new-inline-form">
+                <input
+                  value={chapterTitle}
+                  onChange={(e) => setChapterTitle(e.target.value)}
+                  placeholder="نام فصل"
+                />
+
+                <button
+                  className="admin-new-primary"
+                  onClick={saveChapter}
+                  disabled={loading}
+                >
+                  {editingChapterId ? "ذخیره فصل" : "افزودن فصل"}
+                </button>
+              </div>
+            </div>
+
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <h2>فصل‌ها و درس‌ها</h2>
+                  <p>
+                    {selectedCourse.chapters?.length || 0} فصل
+                  </p>
+                </div>
+              </div>
+
+              {selectedCourse.chapters?.length === 0 ? (
+                <div className="admin-new-empty">
+                  هنوز فصلی برای این دوره ساخته نشده است.
+                </div>
+              ) : (
+                <div className="admin-new-chapters">
+                  {selectedCourse.chapters.map((chapter, index) => (
+                    <div className="admin-new-chapter" key={chapter.id}>
+                      <div className="admin-new-chapter-head">
+                        <div>
+                          <span className="admin-new-number">{index + 1}</span>
+                          <strong>{chapter.title}</strong>
+                          <small>
                             {chapter.lessons?.length || 0} درس
-                          </div>
-
+                          </small>
                         </div>
 
-                        {chapter.lessons?.length > 0 && (
-                          <div className="admin-new-lessons">
-
-                            {chapter.lessons.map((lesson, lessonIndex) => (
-                              <div
-                                className="admin-new-lesson"
-                                key={lesson.id}
-                              >
-                                <div className="admin-new-lesson-number">
-                                  {lessonIndex + 1}
-                                </div>
-
-                                <div className="admin-new-lesson-info">
-                                  <strong>
-                                    {lesson.title}
-                                  </strong>
-
-                                  <span>
-                                    {lesson.duration || "مدت نامشخص"}
-                                    {" · "}
-                                    {Boolean(lesson.free)
-                                      ? "رایگان"
-                                      : "پولی"}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-
-                          </div>
-                        )}
-
-                      </div>
-                    ))}
-
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-          ) : (
-            <>
-              {/* ================= داشبورد ================= */}
-
-              {activeMenu === "dashboard" && (
-                <>
-                  <div className="admin-new-welcome">
-                    <div>
-                      <span>خوش آمدید 👋</span>
-                      <h2>مدیریت مهندسینو</h2>
-                      <p>
-                        دوره‌ها، فصل‌ها و درس‌های آموزشی را از اینجا مدیریت کنید.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="admin-new-stats">
-
-                    <div className="admin-new-stat-card">
-                      <span>📚</span>
-                      <div>
-                        <small>دوره‌ها</small>
-                        <strong>
-                          {loading ? "…" : courses.length}
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="admin-new-stat-card">
-                      <span>👤</span>
-                      <div>
-                        <small>کاربران</small>
-                        <strong>—</strong>
-                      </div>
-                    </div>
-
-                    <div className="admin-new-stat-card">
-                      <span>🛒</span>
-                      <div>
-                        <small>سفارش‌ها</small>
-                        <strong>—</strong>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div className="admin-new-panel">
-
-                    <div className="admin-new-panel-header">
-                      <div>
-                        <span>محتوای آموزشی</span>
-                        <h2>دوره‌های اخیر</h2>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="admin-new-primary-btn"
-                        onClick={() => setActiveMenu("courses")}
-                      >
-                        مشاهده دوره‌ها
-                      </button>
-                    </div>
-
-                    {loading ? (
-                      <div className="admin-new-empty">
-                        <div>⏳</div>
-                        <h3>در حال دریافت دوره‌ها...</h3>
-                      </div>
-                    ) : (
-                      <div className="admin-new-course-list">
-
-                        {courses.map((item) => (
-                          <div
-                            className="admin-new-course-row"
-                            key={item.id}
+                        <div className="admin-new-course-actions">
+                          <button
+                            className="admin-new-secondary"
+                            onClick={() => editChapter(chapter)}
                           >
-                            <div className="admin-new-course-icon">
-                              📚
+                            ویرایش
+                          </button>
+
+                          <button
+                            className="admin-new-danger"
+                            onClick={() => deleteChapter(chapter.id)}
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="admin-new-lessons">
+                        {chapter.lessons?.map((lesson, lessonIndex) => (
+                          <div
+                            className="admin-new-lesson"
+                            key={lesson.id}
+                          >
+                            <div className="admin-new-lesson-number">
+                              {lessonIndex + 1}
                             </div>
 
-                            <div className="admin-new-course-info">
-                              <strong>{item.title}</strong>
+                            <div className="admin-new-lesson-info">
+                              <strong>{lesson.title}</strong>
+
                               <span>
-                                {item.category || "بدون دسته‌بندی"}
+                                {lesson.duration || "مدت نامشخص"}
+                                {Boolean(lesson.free) && " · رایگان"}
                               </span>
                             </div>
 
-                            <div className="admin-new-course-price">
-                              {Boolean(item.is_free)
-                                ? "رایگان"
-                                : `${Number(
-                                    item.price || 0
-                                  ).toLocaleString("fa-IR")} تومان`}
-                            </div>
+                            <div className="admin-new-course-actions">
+                              <button
+                                className="admin-new-secondary"
+                                onClick={() =>
+                                  editLesson(lesson, chapter.id)
+                                }
+                              >
+                                ویرایش
+                              </button>
 
-                            <button
-                              type="button"
-                              className="admin-new-secondary-btn"
-                              onClick={() => openCourse(item.id)}
-                            >
-                              مدیریت
-                            </button>
+                              <button
+                                className="admin-new-danger"
+                                onClick={() => deleteLesson(lesson.id)}
+                              >
+                                حذف
+                              </button>
+                            </div>
                           </div>
                         ))}
 
-                      </div>
-                    )}
-
-                  </div>
-                </>
-              )}
-
-              {/* ================= دوره‌ها ================= */}
-
-              {activeMenu === "courses" && (
-                <div className="admin-new-panel">
-
-                  <div className="admin-new-panel-header">
-                    <div>
-                      <span>مدیریت محتوا</span>
-                      <h2>دوره‌های آموزشی</h2>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="admin-new-primary-btn"
-                      onClick={() => setShowCourseForm((value) => !value)}
-                    >
-                      {showCourseForm ? "بستن فرم" : "+ ایجاد دوره جدید"}
-                    </button>
-                  </div>
-
-                  {showCourseForm && (
-                    <div className="admin-new-course-form">
-                      <div className="admin-new-form-grid">
-                        <div className="admin-new-form-group">
-                          <label>عنوان دوره</label>
-                          <input
-                            type="text"
-                            value={courseForm.title}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                title: event.target.value,
-                              })
-                            }
-                            placeholder="مثلاً آموزش اکسل برای مهندسی صنایع"
-                          />
-                        </div>
-
-                        <div className="admin-new-form-group">
-                          <label>دسته‌بندی</label>
-                          <input
-                            type="text"
-                            value={courseForm.category}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                category: event.target.value,
-                              })
-                            }
-                            placeholder="مثلاً مهندسی صنایع"
-                          />
-                        </div>
-
-                        <div className="admin-new-form-group">
-                          <label>سطح دوره</label>
-                          <select
-                            value={courseForm.level}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                level: event.target.value,
-                              })
-                            }
-                          >
-                            <option value="مقدماتی">مقدماتی</option>
-                            <option value="متوسط">متوسط</option>
-                            <option value="پیشرفته">پیشرفته</option>
-                          </select>
-                        </div>
-
-                        <div className="admin-new-form-group">
-                          <label>قیمت (تومان)</label>
-                          <input
-                            type="number"
-                            value={courseForm.price}
-                            disabled={courseForm.is_free}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                price: event.target.value,
-                              })
-                            }
-                            placeholder="مثلاً 399000"
-                          />
-                        </div>
-
-                        <div className="admin-new-form-group admin-new-form-full">
-                          <label>لینک تصویر دوره</label>
-                          <input
-                            type="text"
-                            value={courseForm.image}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                image: event.target.value,
-                              })
-                            }
-                            placeholder="https://..."
-                          />
-                        </div>
-
-                        <div className="admin-new-form-group admin-new-form-full">
-                          <label>توضیحات دوره</label>
-                          <textarea
-                            value={courseForm.description}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                description: event.target.value,
-                              })
-                            }
-                            placeholder="توضیح کوتاهی درباره محتوای دوره..."
-                            rows="5"
-                          />
-                        </div>
-
-                        <label className="admin-new-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={courseForm.is_free}
-                            onChange={(event) =>
-                              setCourseForm({
-                                ...courseForm,
-                                is_free: event.target.checked,
-                                price: event.target.checked
-                                  ? ""
-                                  : courseForm.price,
-                              })
-                            }
-                          />
-                          <span>این دوره رایگان است</span>
-                        </label>
-                      </div>
-
-                      <div className="admin-new-form-actions">
-                        <button
-                          type="button"
-                          className="admin-new-primary-btn"
-                          onClick={createCourse}
-                        >
-                          ایجاد دوره
-                        </button>
-
-                        <button
-                          type="button"
-                          className="admin-new-secondary-btn"
-                          onClick={() => {
-                            setShowCourseForm(false);
-                            setCourseForm({
-                              title: "",
-                              category: "",
-                              level: "مقدماتی",
-                              price: "",
-                              image: "",
-                              description: "",
-                              is_free: true,
-                            });
-                          }}
-                        >
-                          انصراف
-                        </button>
+                        {(!chapter.lessons ||
+                          chapter.lessons.length === 0) && (
+                          <div className="admin-new-empty-small">
+                            این فصل هنوز درسی ندارد.
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
-
-                  {loading ? (
-                    <div className="admin-new-empty">
-                      <div>⏳</div>
-                      <h3>در حال دریافت دوره‌ها...</h3>
-                    </div>
-                  ) : (
-                    <div className="admin-new-course-list">
-
-                      {courses.map((item) => (
-                        <div
-                          className="admin-new-course-row"
-                          key={item.id}
-                        >
-                          <div className="admin-new-course-icon">
-                            📚
-                          </div>
-
-                          <div className="admin-new-course-info">
-                            <strong>{item.title}</strong>
-                            <span>
-                              {item.category || "بدون دسته‌بندی"}
-                            </span>
-                          </div>
-
-                          <div className="admin-new-course-price">
-                            {Boolean(item.is_free)
-                              ? "رایگان"
-                              : `${Number(
-                                  item.price || 0
-                                ).toLocaleString("fa-IR")} تومان`}
-                          </div>
-
-                          <button
-                            type="button"
-                            className="admin-new-secondary-btn"
-                            onClick={() => openCourse(item.id)}
-                          >
-                            مدیریت
-                          </button>
-                        </div>
-                      ))}
-
-                    </div>
-                  )}
-
+                  ))}
                 </div>
               )}
+            </div>
 
-              {/* ================= سایر بخش‌ها ================= */}
+            <div className="admin-new-card">
+              <div className="admin-new-card-head">
+                <div>
+                  <h2>
+                    {editingLessonId ? "ویرایش درس" : "افزودن درس"}
+                  </h2>
+                  <p>محتوای هر درس را ثبت کنید.</p>
+                </div>
 
-              {activeMenu !== "dashboard" &&
-                activeMenu !== "courses" && (
-                  <div className="admin-new-panel">
-                    <div className="admin-new-empty">
-                      <div>🚧</div>
-                      <h3>این بخش در حال آماده‌سازی است</h3>
-                      <p>
-                        فعلاً روی مدیریت دوره‌ها تمرکز می‌کنیم.
-                      </p>
-                    </div>
-                  </div>
+                {editingLessonId && (
+                  <button
+                    className="admin-new-secondary"
+                    onClick={resetLessonForm}
+                  >
+                    لغو
+                  </button>
                 )}
-            </>
-          )}
+              </div>
 
-        </div>
-      </section>
-    </main>
+              <div className="admin-new-form-grid">
+                <div>
+                  <label>فصل</label>
+                  <select
+                    value={lessonForm.chapter_id}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        chapter_id: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">انتخاب فصل</option>
+
+                    {selectedCourse.chapters?.map((chapter) => (
+                      <option value={chapter.id} key={chapter.id}>
+                        {chapter.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label>عنوان درس</label>
+                  <input
+                    value={lessonForm.title}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        title: e.target.value,
+                      })
+                    }
+                    placeholder="مثلاً تابع و دامنه"
+                  />
+                </div>
+
+                <div>
+                  <label>لینک ویدیو</label>
+                  <input
+                    dir="ltr"
+                    value={lessonForm.video}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        video: e.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label>مدت</label>
+                  <input
+                    value={lessonForm.duration}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        duration: e.target.value,
+                      })
+                    }
+                    placeholder="مثلاً 18:30"
+                  />
+                </div>
+
+                <div className="admin-new-full">
+                  <label>توضیحات درس</label>
+                  <textarea
+                    rows="3"
+                    value={lessonForm.description}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="توضیحات..."
+                  />
+                </div>
+
+                <label className="admin-new-check">
+                  <input
+                    type="checkbox"
+                    checked={lessonForm.free}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        free: e.target.checked,
+                      })
+                    }
+                  />
+                  این درس رایگان باشد
+                </label>
+              </div>
+
+              <button
+                className="admin-new-primary"
+                onClick={saveLesson}
+                disabled={loading}
+              >
+                {editingLessonId ? "ذخیره تغییرات درس" : "افزودن درس"}
+              </button>
+            </div>
+          </section>
+        )}
+
+        {section === "users" && (
+          <section className="admin-new-section">
+            <div className="admin-new-card">
+              <h2>کاربران</h2>
+              <p className="admin-new-muted">
+                بخش مدیریت کاربران در مرحله بعد به API کاربران متصل می‌شود.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {section === "orders" && (
+          <section className="admin-new-section">
+            <div className="admin-new-card">
+              <h2>سفارش‌ها</h2>
+              <p className="admin-new-muted">
+                بخش سفارش‌ها و پرداخت‌ها در مرحله بعد به D1 متصل می‌شود.
+              </p>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
 
