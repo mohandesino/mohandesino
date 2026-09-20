@@ -1,61 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مهندسینو | ورود و ثبت نام</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; }
-        body { background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .auth-card { background: #ffffff; width: 100%; max-width: 420px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); padding: 40px 30px; text-align: center; }
-        .auth-title { font-size: 24px; font-weight: 800; color: #333; margin-bottom: 10px; }
-        .auth-subtitle { font-size: 14px; color: #777; margin-bottom: 30px; }
-        .input-group { position: relative; margin-bottom: 20px; text-align: right; }
-        .input-group label { display: block; font-size: 13px; color: #555; margin-bottom: 8px; font-weight: 600; }
-        .input-group input { width: 100%; padding: 14px 16px; border: 1.5px solid #e0e0e0; border-radius: 12px; font-size: 15px; background-color: #f9f9f9; transition: all 0.3s ease; outline: none; }
-        .input-group input:focus { border-color: #6a4cff; background-color: #fff; box-shadow: 0 0 0 4px rgba(106, 76, 255, 0.1); }
-        .btn-primary { width: 100%; padding: 14px; background: linear-gradient(90deg, #6a4cff, #8e72ff); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; margin-top: 10px; box-shadow: 0 4px 15px rgba(106, 76, 255, 0.3); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(106, 76, 255, 0.4); }
-        .auth-link { margin-top: 25px; font-size: 14px; color: #777; }
-        .auth-link a { color: #6a4cff; text-decoration: none; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="auth-card" id="register-card">
-        <h2 class="auth-title">ایجاد حساب</h2>
-        <p class="auth-subtitle">در مهندسینو حساب کاربری بسازید</p>
-        <form action="#" method="POST">
-            <div class="input-group"><label>نام و نام خانوادگی</label><input type="text" placeholder="مثلا: علی محمدی" required></div>
-            <div class="input-group"><label>شماره موبایل</label><input type="tel" placeholder="09123456789" required></div>
-            <div class="input-group"><label>رمز عبور</label><input type="password" placeholder="حداقل ۶ کاراکتر" required></div>
-            <div class="input-group"><label>تکرار رمز عبور</label><input type="password" placeholder="رمز عبور را دوباره وارد کنید" required></div>
-            <button type="submit" class="btn-primary">ثبت نام</button>
-        </form>
-        <p class="auth-link">قبلاً حساب دارید؟ <a href="#" onclick="toggleForm()">وارد شوید</a></p>
-    </div>
-    <div class="auth-card" id="login-card" style="display: none;">
-        <h2 class="auth-title">ورود به حساب</h2>
-        <p class="auth-subtitle">به مهندسینو خوش آمدید</p>
-        <form action="#" method="POST">
-            <div class="input-group"><label>شماره موبایل</label><input type="tel" placeholder="09123456789" required></div>
-            <div class="input-group"><label>رمز عبور</label><input type="password" placeholder="رمز عبور خود را وارد کنید" required></div>
-            <button type="submit" class="btn-primary">ورود</button>
-        </form>
-        <p class="auth-link">حساب کاربری ندارید؟ <a href="#" onclick="toggleForm()">ثبت‌نام کنید</a></p>
-    </div>
-    <script>
-        function toggleForm() {
-            const registerCard = document.getElementById('register-card');
-            const loginCard = document.getElementById('login-card');
-            if (registerCard.style.display === 'none') {
-                registerCard.style.display = 'block';
-                loginCard.style.display = 'none';
-            } else {
-                registerCard.style.display = 'none';
-                loginCard.style.display = 'block';
-            }
-        }
-    </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مهندسینو | آموزش مهندسی</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
