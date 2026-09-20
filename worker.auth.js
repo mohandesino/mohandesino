@@ -74,6 +74,31 @@ export default {
         );
       }
 
+      if (path === "/api/admin/logout" && request.method === "POST") {
+        const auth = request.headers.get("Authorization") || "";
+
+        if (auth.startsWith("Bearer ")) {
+          const token = auth.slice(7).trim();
+
+          if (token) {
+            await env.DB.prepare(
+              "DELETE FROM admin_sessions WHERE token = ?",
+            )
+              .bind(token)
+              .run();
+          }
+        }
+
+        return json(
+          {
+            success: true,
+            message: "خروج مدیریت با موفقیت انجام شد",
+          },
+          200,
+          cors,
+        );
+      }
+
       // =========================
       // SIGNUP
       // =========================
@@ -479,6 +504,32 @@ export default {
               message: "دوره پیدا نشد",
             },
             404,
+            cors,
+          );
+        }
+
+        const orderCount = await env.DB.prepare(
+          "SELECT COUNT(*) AS count FROM orders WHERE course_id = ?",
+        )
+          .bind(courseId)
+          .first();
+
+        const enrollmentCount = await env.DB.prepare(
+          "SELECT COUNT(*) AS count FROM enrollments WHERE course_id = ?",
+        )
+          .bind(courseId)
+          .first();
+
+        if (
+          Number(orderCount?.count || 0) > 0 ||
+          Number(enrollmentCount?.count || 0) > 0
+        ) {
+          return json(
+            {
+              success: false,
+              message: "این دوره دارای سفارش یا ثبت‌نام است و قابل حذف نیست.",
+            },
+            409,
             cors,
           );
         }
