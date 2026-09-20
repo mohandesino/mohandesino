@@ -92,7 +92,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         return;
       }
 
-      localStorage.setItem("mohandesino_admin_token", token);
+      localStorage.setItem("mohandesino_admin_token", data.admin_token);
       setIsLoggedIn(true);
       setPassword("");
     } catch (err) {
@@ -127,22 +127,35 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       .then(res => res.json())
       .then(async data => {
         const list = data.courses || [];
-        const full = await Promise.all(list.map(async item => {
-          const res = await fetch(`${API_BASE}/api/courses/${item.id}/full`);
-          const data = await res.json();
-          return data.course || item;
-        }));
-        setCourses(full.map(item => ({
-          ...item,
-          isFree: Boolean(item.is_free),
-          chapters: (item.chapters || []).map(ch => ({
-            ...ch,
-            lessons: (ch.lessons || []).map(l => ({
-              ...l,
-              free: Boolean(l.free)
+
+        const full = await Promise.all(
+          list.map(async item => {
+            const res = await fetch(
+              `${API_BASE}/api/courses/${item.id}/full`
+            );
+
+            const fullData = await res.json();
+
+            return {
+              ...(fullData.course || item),
+              chapters: fullData.chapters || []
+            };
+          })
+        );
+
+        setCourses(
+          full.map(item => ({
+            ...item,
+            isFree: Boolean(item.is_free),
+            chapters: (item.chapters || []).map(ch => ({
+              ...ch,
+              lessons: (ch.lessons || []).map(l => ({
+                ...l,
+                free: Boolean(l.free)
+              }))
             }))
           }))
-        })));
+        );
       })
       .catch(() => setCourses([]));
 
@@ -211,7 +224,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     if (!window.confirm("آیا از حذف این دوره مطمئن هستید؟")) return;
 
     try {
-      const response = await adminFetch(`${API_BASE}/api/courses/${id}`, {
+      const response = await adminFetch(`${API_BASE}/api/admin/courses/${id}`, {
         method: "DELETE"
       });
 
@@ -396,6 +409,9 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     setEditingLessonTitle(lesson.title || "");
     setEditingLessonVideo(lesson.video || "");
     setEditingLessonFree(Boolean(lesson.free));
+    setEditingLessonDuration(lesson.duration || "");
+    setEditingLessonDescription(lesson.description || "");
+    setEditingLessonSortOrder(Number(lesson.sort_order) || 1);
   };
 
   const saveLessonEdit = async (chapterId, lessonId) => {
@@ -411,7 +427,10 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
         body: JSON.stringify({
           title: editingLessonTitle.trim(),
           video: editingLessonVideo.trim(),
-          free: editingLessonFree ? 1 : 0
+          free: editingLessonFree ? 1 : 0,
+          duration: editingLessonDuration.trim(),
+          description: editingLessonDescription.trim(),
+          sort_order: Number(editingLessonSortOrder) || 1
         })
       });
 
@@ -430,7 +449,10 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
                         ...lesson,
                         title: editingLessonTitle.trim(),
                         video: editingLessonVideo.trim(),
-                        free: editingLessonFree
+                        free: editingLessonFree,
+                        duration: editingLessonDuration.trim(),
+                        description: editingLessonDescription.trim(),
+                        sort_order: Number(editingLessonSortOrder) || 1
                       }
                     : lesson
                 )
@@ -443,6 +465,9 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       setEditingLessonTitle("");
       setEditingLessonVideo("");
       setEditingLessonFree(false);
+      setEditingLessonDuration("");
+      setEditingLessonDescription("");
+      setEditingLessonSortOrder(1);
 
       alert("✅ درس با موفقیت ویرایش شد.");
     } catch (error) {
@@ -493,48 +518,67 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
       let courseId = course.id;
 
       if (courseId) {
-        const response = await adminFetch(`${API_BASE}/api/courses/${courseId}`, {
+        const response = await adminFetch(`${API_BASE}/api/admin/courses/${courseId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         if (!response.ok) throw new Error("خطا در ویرایش دوره");
       } else {
-        const response = await adminFetch(`${API_BASE}/api/courses`, {
+        const response = await adminFetch(`${API_BASE}/api/admin/courses`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "خطا در ایجاد دوره");
-        courseId = data.id;
+        courseId = data.course?.id || data.id;
       }
 
-      const fullResponse = await fetch(`${API_BASE}/api/courses/${courseId}/full`);
+      const fullResponse = await fetch(
+        `${API_BASE}/api/courses/${courseId}/full`
+      );
       const fullData = await fullResponse.json();
 
-      setCourse({
-        ...course,
-        ...fullData.course,
+      const savedCourse = {
+        ...(fullData.course || course),
         id: courseId,
         isFree: Boolean(fullData.course?.is_free),
-        chapters: fullData.course?.chapters || []
-      });
+        chapters: (fullData.chapters || []).map(ch => ({
+          ...ch,
+          lessons: (ch.lessons || []).map(l => ({
+            ...l,
+            free: Boolean(l.free)
+          }))
+        }))
+      };
+
+      setCourse(savedCourse);
 
       const listResponse = await fetch(`${API_BASE}/api/courses`);
       const listData = await listResponse.json();
-      const fullCourses = await Promise.all((listData.courses || []).map(async item => {
-        const r = await fetch(`${API_BASE}/api/courses/${item.id}/full`);
-        const d = await r.json();
-        return {
-          ...d.course,
-          isFree: Boolean(d.course?.is_free),
-          chapters: (d.course?.chapters || []).map(ch => ({
-            ...ch,
-            lessons: (ch.lessons || []).map(l => ({ ...l, free: Boolean(l.free) }))
-          }))
-        };
-      }));
+
+      const fullCourses = await Promise.all(
+        (listData.courses || []).map(async item => {
+          const r = await fetch(
+            `${API_BASE}/api/courses/${item.id}/full`
+          );
+          const d = await r.json();
+
+          return {
+            ...(d.course || item),
+            isFree: Boolean(d.course?.is_free),
+            chapters: (d.chapters || []).map(ch => ({
+              ...ch,
+              lessons: (ch.lessons || []).map(l => ({
+                ...l,
+                free: Boolean(l.free)
+              }))
+            }))
+          };
+        })
+      );
+
       setCourses(fullCourses);
       setEditingId(courseId);
 
