@@ -1950,6 +1950,8 @@ body {
 .admin-field-half select,
 .admin-field-full textarea,
 .admin-field-half textarea {
+  direction: rtl;
+  unicode-bidi: plaintext;
   width: 100%;
   padding: 10px 14px;
   border-radius: 12px;

@@ -16,7 +16,7 @@ import Search from "./pages/Search";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
+import AdminNew from "./pages/AdminNew";
 import Player from "./pages/Player";
 
 import Checkout from "./pages/Checkout";
@@ -44,7 +44,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin" element={<AdminNew />} />
         <Route path="/player" element={<Player />} />
         
         <Route path="/checkout/:id" element={<Checkout />} />

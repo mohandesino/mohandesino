@@ -1,6 +1,5 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import CourseComments from "../components/CourseComments";
 import { API_BASE } from "../config.js";
 
 function Course() {
@@ -204,12 +203,6 @@ function Course() {
             )}
           </div>
         </aside>
-
-        {/* ===== بخش نظرات (جدید) ===== */}
-        <div className="course-comments-section">
-          <CourseComments courseId={id} />
-        </div>
-
       </div>
     </main>
   );
