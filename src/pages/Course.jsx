@@ -23,10 +23,67 @@ function Course() {
         setCourse(data.course);
 
         const savedMy = localStorage.getItem("mohandesino_my_courses");
+        let localPurchased = false;
+
         if (savedMy) {
           const my = JSON.parse(savedMy);
           setMyCourses(my);
-          setIsPurchased(my.some(c => String(c.id) === String(id)));
+          localPurchased = my.some(c => String(c.id) === String(id));
+        }
+
+        const token = localStorage.getItem("auth_token");
+
+        if (token) {
+          try {
+            const myCoursesResponse = await fetch(
+              `${API_BASE}/api/my-courses`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            const myCoursesData = await myCoursesResponse.json().catch(() => null);
+
+            if (
+              myCoursesResponse.ok &&
+              myCoursesData?.success &&
+              Array.isArray(myCoursesData.courses)
+            ) {
+              const backendPurchased = myCoursesData.courses.some(
+                c => String(c.id) === String(id)
+              );
+
+              if (backendPurchased) {
+                setIsPurchased(true);
+              } else if (course.isFree || Number(course.price) === 0) {
+                setIsPurchased(localPurchased);
+              } else {
+                setIsPurchased(false);
+              }
+            } else {
+              setIsPurchased(
+                course.isFree || Number(course.price) === 0
+                  ? localPurchased
+                  : false
+              );
+            }
+          } catch (error) {
+            console.error("خطا در بررسی دوره‌های خریداری‌شده:", error);
+
+            setIsPurchased(
+              course.isFree || Number(course.price) === 0
+                ? localPurchased
+                : false
+            );
+          }
+        } else {
+          setIsPurchased(
+            course.isFree || Number(course.price) === 0
+              ? localPurchased
+              : false
+          );
         }
       } catch (error) {
         console.error("خطا در دریافت دوره:", error);
