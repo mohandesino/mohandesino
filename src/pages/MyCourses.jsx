@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config.js";
 
 function MyCourses() {
   const [myCourses, setMyCourses] = useState([]);
@@ -8,15 +9,73 @@ function MyCourses() {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    const saved = localStorage.getItem("mohandesino_my_courses");
-    if (saved) {
-      const courses = JSON.parse(saved);
-      setMyCourses(courses);
-      
-      // دریافت پیشرفت هر دوره
+    const loadMyCourses = async () => {
+      const saved = localStorage.getItem("mohandesino_my_courses");
+      const localCourses = saved ? JSON.parse(saved) : [];
+
+      try {
+        const token = localStorage.getItem("auth_token");
+
+        if (token) {
+          const response = await fetch(
+            `${API_BASE}/api/my-courses`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          const data = await response.json().catch(() => null);
+
+          if (response.ok && data?.success && Array.isArray(data.courses)) {
+            const backendCourses = data.courses;
+
+            const merged = [
+              ...backendCourses,
+              ...localCourses.filter(
+                localCourse =>
+                  !backendCourses.some(
+                    backendCourse =>
+                      String(backendCourse.id) === String(localCourse.id)
+                  )
+              ),
+            ];
+
+            setMyCourses(merged);
+
+            const progress = {};
+            merged.forEach(c => {
+              const savedProgress = localStorage.getItem(
+                `mohandesino_progress_${c.id}`
+              );
+
+              if (savedProgress) {
+                const p = JSON.parse(savedProgress);
+                const total = p.total || 1;
+                const done = p.completed?.length || 0;
+                progress[c.id] = Math.round((done / total) * 100);
+              } else {
+                progress[c.id] = 0;
+              }
+            });
+
+            setProgressData(progress);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("خطا در دریافت دوره‌های من:", error);
+      }
+
+      setMyCourses(localCourses);
+
       const progress = {};
-      courses.forEach(c => {
-        const savedProgress = localStorage.getItem(`mohandesino_progress_${c.id}`);
+      localCourses.forEach(c => {
+        const savedProgress = localStorage.getItem(
+          `mohandesino_progress_${c.id}`
+        );
+
         if (savedProgress) {
           const p = JSON.parse(savedProgress);
           const total = p.total || 1;
@@ -26,8 +85,11 @@ function MyCourses() {
           progress[c.id] = 0;
         }
       });
+
       setProgressData(progress);
-    }
+    };
+
+    loadMyCourses();
   }, []);
 
   return (

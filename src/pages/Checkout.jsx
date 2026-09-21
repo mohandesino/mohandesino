@@ -30,23 +30,66 @@ function Checkout() {
     loadCourse();
   }, [id, navigate]);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setLoading(true);
-    // شبیه‌سازی پرداخت
-    setTimeout(() => {
+
+    try {
+      const token = localStorage.getItem("auth_token");
+
+      if (!token) {
+        alert("برای خرید دوره ابتدا وارد حساب کاربری شوید.");
+        navigate("/login");
+        return;
+      }
+
+      const orderResponse = await fetch(`${API_BASE}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          course_id: Number(course.id),
+        }),
+      });
+
+      const orderData = await orderResponse.json().catch(() => null);
+
+      if (!orderResponse.ok || !orderData?.success || !orderData?.order?.id) {
+        throw new Error(
+          orderData?.message || "ایجاد سفارش با خطا مواجه شد."
+        );
+      }
+
+      const paymentResponse = await fetch(`${API_BASE}/api/payments/request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          order_id: Number(orderData.order.id),
+        }),
+      });
+
+      const paymentData = await paymentResponse.json().catch(() => null);
+
+      if (
+        !paymentResponse.ok ||
+        !paymentData?.success ||
+        !paymentData?.payment_url
+      ) {
+        throw new Error(
+          paymentData?.message || "خطا در اتصال به درگاه زرین‌پال."
+        );
+      }
+
+      window.location.href = paymentData.payment_url;
+    } catch (error) {
+      console.error("خطا در پرداخت:", error);
       setLoading(false);
-      setPaymentComplete(true);
-      
-      // ذخیره دوره در دوره‌های من
-      const savedMy = localStorage.getItem("mohandesino_my_courses");
-      const myCourses = savedMy ? JSON.parse(savedMy) : [];
-      const updated = [...myCourses, course];
-      localStorage.setItem("mohandesino_my_courses", JSON.stringify(updated));
-      
-      setTimeout(() => {
-        navigate("/payment-success");
-      }, 1500);
-    }, 2000);
+      alert(error?.message || "خطایی در شروع پرداخت رخ داد.");
+    }
   };
 
   if (!course) {

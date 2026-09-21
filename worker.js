@@ -774,6 +774,390 @@ if (path === "/api/admin/dashboard" && request.method === "GET") {
 }
 
 
+
+// =========================
+// ORDERS
+// =========================
+if (path === "/api/orders" && request.method === "POST") {
+  const user = await getSessionUser(request, env);
+
+  if (!user) {
+    return json({
+      success: false,
+      message: "برای ثبت سفارش باید وارد حساب شوید",
+    }, 401, cors);
+  }
+
+  const body = await request.json().catch(() => null);
+  const courseId = Number(body?.course_id);
+
+  if (!Number.isInteger(courseId) || courseId <= 0) {
+    return json({
+      success: false,
+      message: "شناسه دوره نامعتبر است",
+    }, 400, cors);
+  }
+
+  const course = await env.DB
+    .prepare(`
+      SELECT id, title, price, is_free
+      FROM courses
+      WHERE id = ?
+      LIMIT 1
+    `)
+    .bind(courseId)
+    .first();
+
+  if (!course) {
+    return json({
+      success: false,
+      message: "دوره پیدا نشد",
+    }, 404, cors);
+  }
+
+  if (Number(course.is_free) === 1 || Number(course.price) <= 0) {
+    return json({
+      success: false,
+      message: "این دوره رایگان است و نیازی به سفارش ندارد",
+    }, 400, cors);
+  }
+
+  const existing = await env.DB
+    .prepare(`
+      SELECT id, status
+      FROM orders
+      WHERE user_id = ?
+        AND course_id = ?
+        AND status = 'pending'
+      ORDER BY id DESC
+      LIMIT 1
+    `)
+    .bind(user.id, courseId)
+    .first();
+
+  if (existing) {
+    return json({
+      success: true,
+      message: "سفارش در انتظار پرداخت از قبل وجود دارد",
+      order: {
+        id: existing.id,
+        status: existing.status,
+        course_id: course.id,
+        amount: Number(course.price),
+      },
+    }, 200, cors);
+  }
+
+  const result = await env.DB
+    .prepare(`
+      INSERT INTO orders (user_id, course_id, amount, status)
+      VALUES (?, ?, ?, 'pending')
+    `)
+    .bind(user.id, courseId, Number(course.price))
+    .run();
+
+  return json({
+    success: true,
+    message: "سفارش با موفقیت ایجاد شد",
+    order: {
+      id: result.meta.last_row_id,
+      course_id: course.id,
+      course_title: course.title,
+      amount: Number(course.price),
+      status: "pending",
+    },
+  }, 201, cors);
+}
+
+
+// =========================
+// ZARINPAL PAYMENT REQUEST
+// =========================
+if (path === "/api/payments/request" && request.method === "POST") {
+  const user = await getSessionUser(request, env);
+
+  if (!user) {
+    return json({
+      success: false,
+      message: "برای پرداخت باید وارد حساب شوید",
+    }, 401, cors);
+  }
+
+  const body = await request.json().catch(() => null);
+  const orderId = Number(body?.order_id);
+
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return json({
+      success: false,
+      message: "شناسه سفارش نامعتبر است",
+    }, 400, cors);
+  }
+
+  const order = await env.DB
+    .prepare(`
+      SELECT
+        o.id,
+        o.user_id,
+        o.course_id,
+        o.amount,
+        o.status,
+        c.title
+      FROM orders o
+      JOIN courses c ON c.id = o.course_id
+      WHERE o.id = ?
+      LIMIT 1
+    `)
+    .bind(orderId)
+    .first();
+
+  if (!order) {
+    return json({
+      success: false,
+      message: "سفارش پیدا نشد",
+    }, 404, cors);
+  }
+
+  if (Number(order.user_id) !== Number(user.id)) {
+    return json({
+      success: false,
+      message: "این سفارش متعلق به شما نیست",
+    }, 403, cors);
+  }
+
+  if (order.status !== "pending") {
+    return json({
+      success: false,
+      message: "این سفارش در وضعیت قابل پرداخت نیست",
+    }, 400, cors);
+  }
+
+  const amount = Number(order.amount);
+
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return json({
+      success: false,
+      message: "مبلغ سفارش نامعتبر است",
+    }, 400, cors);
+  }
+
+  const merchantId = env.ZARINPAL_MERCHANT_ID;
+
+  if (!merchantId) {
+    return json({
+      success: false,
+      message: "تنظیمات درگاه پرداخت انجام نشده است",
+    }, 500, cors);
+  }
+
+  const callbackUrl =
+    "https://mohandesino-api.mohammadrezafazelinia92.workers.dev/api/payments/callback";
+
+  const paymentRequest = await zarinpalRequest("request", {
+    merchant_id: merchantId,
+    amount,
+    currency: "IRT",
+    description: `پرداخت دوره ${order.title}`,
+    callback_url: callbackUrl,
+    metadata: {
+      order_id: String(order.id),
+      mobile: user.phone || "",
+    },
+  });
+
+  const data = paymentRequest.data?.data;
+
+  if (!paymentRequest.ok || !data || Number(data.code) !== 100) {
+    return json({
+      success: false,
+      message: data?.message || "خطا در ایجاد تراکنش زرین‌پال",
+      code: data?.code ?? null,
+      errors: paymentRequest.data?.errors || [],
+    }, 502, cors);
+  }
+
+  const authority = data.authority;
+
+  if (!authority) {
+    return json({
+      success: false,
+      message: "زرین‌پال شناسه تراکنش برنگرداند",
+    }, 502, cors);
+  }
+
+  await env.DB
+    .prepare(`
+      INSERT INTO payments
+        (order_id, authority, amount, status, gateway)
+      VALUES (?, ?, ?, 'pending', 'zarinpal')
+    `)
+    .bind(order.id, authority, amount)
+    .run();
+
+  return json({
+    success: true,
+    payment_url:
+      `https://payment.zarinpal.com/pg/StartPay/${authority}`,
+    authority,
+    order_id: order.id,
+  }, 200, cors);
+}
+
+
+// =========================
+// ZARINPAL PAYMENT CALLBACK
+// =========================
+if (path === "/api/payments/callback" && request.method === "GET") {
+  const authority = url.searchParams.get("Authority") || "";
+  const status = url.searchParams.get("Status") || "";
+
+  if (!authority) {
+    return Response.redirect(
+      "https://mohandesino2026.ir/payment-failed?reason=missing_authority",
+      302,
+    );
+  }
+
+  const payment = await env.DB
+    .prepare(`
+      SELECT
+        p.id,
+        p.order_id,
+        p.amount,
+        p.status,
+        o.user_id,
+        o.course_id
+      FROM payments p
+      JOIN orders o ON o.id = p.order_id
+      WHERE p.authority = ?
+      LIMIT 1
+    `)
+    .bind(authority)
+    .first();
+
+  if (!payment) {
+    return Response.redirect(
+      `https://mohandesino2026.ir/payment-failed?reason=payment_not_found`,
+      302,
+    );
+  }
+
+  if (status !== "OK") {
+    return Response.redirect(
+      `https://mohandesino2026.ir/payment-failed?order_id=${encodeURIComponent(payment.order_id)}&reason=cancelled`,
+      302,
+    );
+  }
+
+  if (payment.status === "paid") {
+    return Response.redirect(
+      `https://mohandesino2026.ir/payment-success?order_id=${encodeURIComponent(payment.order_id)}`,
+      302,
+    );
+  }
+
+  const merchantId = env.ZARINPAL_MERCHANT_ID;
+
+  if (!merchantId) {
+    return Response.redirect(
+      `https://mohandesino2026.ir/payment-failed?order_id=${encodeURIComponent(payment.order_id)}&reason=merchant_not_configured`,
+      302,
+    );
+  }
+
+  const verifyRequest = await zarinpalRequest("verify", {
+    merchant_id: merchantId,
+    amount: Number(payment.amount) * 10,
+    authority,
+  });
+
+  const verifyData = verifyRequest.data?.data;
+  const verifyCode = Number(verifyData?.code);
+
+  if (!verifyRequest.ok || !verifyData || ![100, 101].includes(verifyCode)) {
+    return Response.redirect(
+      `https://mohandesino2026.ir/payment-failed?order_id=${encodeURIComponent(payment.order_id)}&reason=verify_failed&code=${encodeURIComponent(verifyCode || "")}`,
+      302,
+    );
+  }
+
+  const refId = verifyData.ref_id ? String(verifyData.ref_id) : "";
+
+  await env.DB
+    .prepare(`
+      UPDATE payments
+      SET status = 'paid',
+          ref_id = ?,
+          paid_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `)
+    .bind(refId, payment.id)
+    .run();
+
+  await env.DB
+    .prepare(`
+      UPDATE orders
+      SET status = 'paid'
+      WHERE id = ?
+    `)
+    .bind(payment.order_id)
+    .run();
+
+  await env.DB
+    .prepare(`
+      INSERT OR IGNORE INTO enrollments
+        (user_id, course_id, order_id)
+      VALUES (?, ?, ?)
+    `)
+    .bind(payment.user_id, payment.course_id, payment.order_id)
+    .run();
+
+  return Response.redirect(
+    `https://mohandesino2026.ir/payment-success?order_id=${encodeURIComponent(payment.order_id)}&ref_id=${encodeURIComponent(refId)}`,
+    302,
+  );
+}
+
+
+// =========================
+// MY COURSES
+// =========================
+if (path === "/api/my-courses" && request.method === "GET") {
+  const user = await getSessionUser(request, env);
+
+  if (!user) {
+    return json({
+      success: false,
+      message: "برای مشاهده دوره‌های من باید وارد حساب شوید",
+    }, 401, cors);
+  }
+
+  const { results } = await env.DB
+    .prepare(`
+      SELECT
+        c.id,
+        c.title,
+        c.category,
+        c.level,
+        c.price,
+        c.is_free,
+        c.image,
+        c.description,
+        e.order_id,
+        e.created_at AS enrolled_at
+      FROM enrollments e
+      JOIN courses c ON c.id = e.course_id
+      WHERE e.user_id = ?
+      ORDER BY e.id DESC
+    `)
+    .bind(user.id)
+    .all();
+
+  return json({
+    success: true,
+    courses: results,
+  }, 200, cors);
+}
+
 // NOT FOUND
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           // =========================
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 return json(
@@ -802,7 +1186,32 @@ if (path === "/api/admin/dashboard" && request.method === "GET") {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // PASSWORD HASHING
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     // ========================================
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    async function hashPassword(password) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    // ========================================
+// ZARINPAL API
+// ========================================
+async function zarinpalRequest(action, payload) {
+  const response = await fetch(
+    `https://payment.zarinpal.com/pg/v4/payment/${action}.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const data = await response.json().catch(() => null);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  };
+}
+
+async function hashPassword(password) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       const salt = crypto.getRandomValues(
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           new Uint8Array(16)
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             );
@@ -907,7 +1316,61 @@ if (path === "/api/admin/dashboard" && request.method === "GET") {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           // JSON RESPONSE
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           // ========================================
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          function json(data, status, cors) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+async function getSessionUser(request, env) {
+  const authorization = request.headers.get("Authorization") || "";
+
+  if (!authorization.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authorization.slice(7).trim();
+
+  if (!token) {
+    return null;
+  }
+
+  const session = await env.DB
+    .prepare(`
+      SELECT
+        u.id,
+        u.phone,
+        u.name,
+        u.is_admin,
+        s.expires_at
+      FROM user_sessions s
+      JOIN users u ON u.id = s.user_id
+      WHERE s.token = ?
+      LIMIT 1
+    `)
+    .bind(token)
+    .first();
+
+  if (!session) {
+    return null;
+  }
+
+  if (
+    session.expires_at &&
+    new Date(session.expires_at).getTime() <= Date.now()
+  ) {
+    await env.DB
+      .prepare("DELETE FROM user_sessions WHERE token = ?")
+      .bind(token)
+      .run();
+
+    return null;
+  }
+
+  return {
+    id: session.id,
+    phone: session.phone,
+    name: session.name,
+    is_admin: Number(session.is_admin) === 1,
+  };
+}
+
+function json(data, status, cors) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             return new Response(
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 JSON.stringify(data),
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     {

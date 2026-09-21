@@ -21,6 +21,7 @@ import Player from "./pages/Player";
 
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Faq from "./pages/Faq";
@@ -49,6 +50,7 @@ function App() {
         
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<BlogPost />} />
         <Route path="/faq" element={<Faq />} />

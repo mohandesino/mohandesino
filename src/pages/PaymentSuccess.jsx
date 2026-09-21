@@ -1,8 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function PaymentSuccess() {
+  const [searchParams] = useSearchParams();
   const [time, setTime] = useState(0);
+
+  const refId = searchParams.get("ref_id");
+  const orderId = searchParams.get("order_id");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -21,12 +25,15 @@ function PaymentSuccess() {
         <div className="success-card">
           <div className="success-icon">🎉</div>
           <h1>پرداخت با موفقیت انجام شد!</h1>
-          <p>دوره شما به دوره‌های من اضافه شد.</p>
+          <p>
+            پرداخت شما با موفقیت تأیید شد و دوره به دوره‌های من اضافه شد.
+            {orderId && <><br />شماره سفارش: #{orderId}</>}
+          </p>
 
           <div className="success-details">
             <div className="success-row">
               <span>شماره پیگیری</span>
-              <span className="tracking-code">#MOH-{Math.floor(Math.random() * 1000000)}</span>
+              <span className="tracking-code">{refId || "ثبت‌شده در زرین‌پال"}</span>
             </div>
             <div className="success-row">
               <span>تاریخ</span>
