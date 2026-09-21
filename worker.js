@@ -2,6 +2,8 @@
 const ALLOWED_ORIGINS = [
       "https://mohandesino2026.ir",
         "https://www.mohandesino2026.ir",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
         ];
 
         export default {
