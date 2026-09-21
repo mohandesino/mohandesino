@@ -50,7 +50,12 @@ export default function Login() {
       }
 
       localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("currentUser", JSON.stringify({ ...data.user, isAdmin: data.user.is_admin }));
+      const currentUser = {
+      ...data.user,
+      isAdmin: data.user.is_admin,
+    };
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    window.dispatchEvent(new Event("auth-change"));
 
       navigate("/");
     } catch (err) {

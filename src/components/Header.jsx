@@ -17,16 +17,35 @@ function Header() {
     showFaq: true, // ===== جدید: نمایش یا مخفی کردن FAQ
   });
 
-  useEffect(() => {
+  const loadCurrentUser = () => {
     const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setUser({
-        ...parsed,
-        isAdmin: parsed.isAdmin ?? Boolean(Number(parsed.is_admin)),
-      });
-    }
 
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUser({
+          ...parsed,
+          isAdmin: parsed.isAdmin ?? Boolean(Number(parsed.is_admin)),
+        });
+      } catch {
+        localStorage.removeItem("currentUser");
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    loadCurrentUser();
+    window.addEventListener("auth-change", loadCurrentUser);
+
+    return () => {
+      window.removeEventListener("auth-change", loadCurrentUser);
+    };
+  }, []);
+
+  useEffect(() => {
     const savedSettings = localStorage.getItem("mohandesino_settings");
     if (savedSettings) {
       const data = JSON.parse(savedSettings);
