@@ -57,7 +57,7 @@ function Course() {
 
               if (backendPurchased) {
                 setIsPurchased(true);
-              } else if (course.isFree || Number(course.price) === 0) {
+              } else if (data.course.is_free || Number(data.course.price) === 0) {
                 setIsPurchased(localPurchased);
               } else {
                 setIsPurchased(false);
