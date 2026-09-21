@@ -65,7 +65,7 @@ function AdminNew() {
 
   const authHeaders = () => ({
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
+    Authorization: `Bearer ${token || getToken()}`,
   });
 
   const logout = async () => {
@@ -91,7 +91,7 @@ function AdminNew() {
       ...options,
       headers: {
         ...(options.headers || {}),
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token || getToken()}`,
       },
     });
 
@@ -109,7 +109,7 @@ function AdminNew() {
     }
 
     if (!response.ok) {
-      throw new Error(data?.error || "خطا در ارتباط با سرور");
+      throw new Error(data?.message || data?.error || "خطا در ارتباط با سرور");
     }
 
     return data;
@@ -135,7 +135,7 @@ function AdminNew() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "ورود ناموفق بود");
+        throw new Error(data?.message || data?.error || "ورود ناموفق بود");
       }
 
       localStorage.setItem(TOKEN_KEY, data.token);
@@ -325,6 +325,7 @@ function AdminNew() {
           body: JSON.stringify({
             course_id: selectedCourse.id,
             title: chapterTitle.trim(),
+            sort_order: (selectedCourse.chapters?.length || 0) + 1,
           }),
         });
 
