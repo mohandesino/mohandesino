@@ -972,6 +972,7 @@ if (path === "/api/payments/request" && request.method === "POST") {
       message: data?.message || "خطا در ایجاد تراکنش زرین‌پال",
       code: data?.code ?? null,
       errors: paymentRequest.data?.errors || [],
+      raw: paymentRequest.rawText,
     }, 502, cors);
   }
 
