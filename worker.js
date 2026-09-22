@@ -1202,7 +1202,24 @@ async function zarinpalRequest(action, payload) {
     },
   );
 
-  const data = await response.json().catch(() => null);
+  const rawText = await response.text();
+  const data = (() => {
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      return null;
+    }
+  })();
+
+  console.log("ZarinPal response:", {
+    action,
+    http_status: response.status,
+    ok: response.ok,
+    code: data?.data?.code ?? null,
+    errors: data?.errors ?? [],
+    message: data?.message ?? null,
+    raw_preview: data ? null : rawText.slice(0, 500),
+  });
 
   return {
     ok: response.ok,
