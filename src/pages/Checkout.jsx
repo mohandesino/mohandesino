@@ -79,8 +79,13 @@ function Checkout() {
         !paymentData?.success ||
         !paymentData?.payment_url
       ) {
+        const code = paymentData?.code ?? "نامشخص";
+        const errors = Array.isArray(paymentData?.errors)
+          ? paymentData.errors.join(" | ")
+          : "";
+
         throw new Error(
-          paymentData?.message || "خطا در اتصال به درگاه زرین‌پال."
+          `${paymentData?.message || "خطا در اتصال به درگاه زرین‌پال."} | کد: ${code}${errors ? ` | ${errors}` : ""}`
         );
       }
 
