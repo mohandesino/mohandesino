@@ -969,7 +969,7 @@ if (path === "/api/payments/request" && request.method === "POST") {
   if (!paymentRequest.ok || !data || Number(data.code) !== 100) {
     return json({
       success: false,
-      message: data?.message || "خطا در ایجاد تراکنش زرین‌پال",
+      message: `ZARINPAL_RAW: ${paymentRequest.rawText || "EMPTY"}`,
       code: data?.code ?? null,
       errors: paymentRequest.data?.errors || [],
       raw: paymentRequest.rawText,
