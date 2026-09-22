@@ -1225,6 +1225,7 @@ async function zarinpalRequest(action, payload) {
     ok: response.ok,
     status: response.status,
     data,
+    rawText,
   };
 }
 
