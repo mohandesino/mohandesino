@@ -1067,6 +1067,8 @@ if (path === "/api/bot-payments/request" && request.method === "POST") {
       message: "خطا در ایجاد پرداخت",
       code: data?.code ?? null,
       errors: paymentRequest.data?.errors ?? [],
+      zarinpal_status: paymentRequest.status ?? null,
+      zarinpal_data: paymentRequest.data ?? null,
     }, 502, cors);
   }
 
