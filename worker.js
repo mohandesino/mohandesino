@@ -1004,6 +1004,204 @@ if (path === "/api/payments/request" && request.method === "POST") {
 
 
 // =========================
+// BOT ZARINPAL PAYMENT
+// =========================
+if (path === "/api/bot-payments/request" && request.method === "POST") {
+  const body = await request.json().catch(() => null);
+
+  if (body?.secret !== env.BOT_PAYMENT_SECRET) {
+    return json({ success: false, message: "Unauthorized" }, 401, cors);
+  }
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS bot_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      course_id TEXT NOT NULL,
+      title TEXT,
+      amount INTEGER NOT NULL,
+      authority TEXT UNIQUE,
+      status TEXT DEFAULT 'pending',
+      ref_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      paid_at DATETIME
+    )
+  `).run();
+
+  const userId = String(body?.user_id || "");
+  const courseId = String(body?.course_id || "");
+  const title = String(body?.title || "");
+  const amount = Number(body?.amount);
+
+  if (!userId || !courseId || !Number.isInteger(amount) || amount <= 0) {
+    return json({
+      success: false,
+      message: "اطلاعات پرداخت نامعتبر است",
+    }, 400, cors);
+  }
+
+  const merchantId = env.ZARINPAL_MERCHANT_ID;
+
+  if (!merchantId) {
+    return json({
+      success: false,
+      message: "تنظیمات درگاه پرداخت انجام نشده است",
+    }, 500, cors);
+  }
+
+  const callbackUrl =
+    "https://mohandesino-api.mohammadrezafazelinia92.workers.dev/api/bot-payments/callback";
+
+  const paymentRequest = await zarinpalRequest("request", {
+    merchant_id: merchantId,
+    amount: amount * 10,
+    description: `پرداخت دوره ${title}`,
+    callback_url: callbackUrl,
+  });
+
+  const data = paymentRequest.data?.data;
+
+  if (!paymentRequest.ok || !data || Number(data.code) !== 100) {
+    return json({
+      success: false,
+      message: "خطا در ایجاد پرداخت",
+      code: data?.code ?? null,
+    }, 502, cors);
+  }
+
+  const authority = data.authority;
+
+  await env.DB.prepare(`
+    INSERT INTO bot_payments
+      (user_id, course_id, title, amount, authority, status)
+    VALUES (?, ?, ?, ?, ?, 'pending')
+  `).bind(
+    userId,
+    courseId,
+    title,
+    amount,
+    authority
+  ).run();
+
+  return json({
+    success: true,
+    payment_url:
+      `https://payment.zarinpal.com/pg/StartPay/${authority}`,
+    authority,
+  }, 200, cors);
+}
+
+if (path === "/api/bot-payments/callback" && request.method === "GET") {
+  const authority = url.searchParams.get("Authority") || "";
+  const status = url.searchParams.get("Status") || "";
+
+  if (!authority) {
+    return new Response("پرداخت نامعتبر است.", { status: 400 });
+  }
+
+  const payment = await env.DB.prepare(`
+    SELECT *
+    FROM bot_payments
+    WHERE authority = ?
+    LIMIT 1
+  `).bind(authority).first();
+
+  if (!payment) {
+    return new Response("تراکنش پیدا نشد.", { status: 404 });
+  }
+
+  if (status !== "OK") {
+    await env.DB.prepare(`
+      UPDATE bot_payments
+      SET status = 'cancelled'
+      WHERE id = ?
+    `).bind(payment.id).run();
+
+    return new Response("پرداخت لغو شد. می‌توانید به ربات برگردید.", {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
+
+  if (payment.status === "paid") {
+    return new Response("این پرداخت قبلاً تأیید شده است.", { status: 200 });
+  }
+
+  const merchantId = env.ZARINPAL_MERCHANT_ID;
+
+  if (!merchantId) {
+    return new Response("درگاه پرداخت تنظیم نشده است.", { status: 500 });
+  }
+
+  const verifyRequest = await zarinpalRequest("verify", {
+    merchant_id: merchantId,
+    amount: Number(payment.amount) * 10,
+    authority,
+  });
+
+  const verifyData = verifyRequest.data?.data;
+  const verifyCode = Number(verifyData?.code);
+
+  if (!verifyRequest.ok || !verifyData || ![100, 101].includes(verifyCode)) {
+    return new Response("تأیید پرداخت ناموفق بود.", { status: 400 });
+  }
+
+  const refId = verifyData.ref_id ? String(verifyData.ref_id) : "";
+
+  await env.DB.prepare(`
+    UPDATE bot_payments
+    SET status = 'paid',
+        ref_id = ?,
+        paid_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(refId, payment.id).run();
+
+  return new Response(
+    "پرداخت با موفقیت تأیید شد. به ربات برگردید.",
+    {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    }
+  );
+}
+
+if (path === "/api/bot-payments/status" && request.method === "GET") {
+  const secret = request.headers.get("Authorization") || "";
+
+  if (secret !== `Bearer ${env.BOT_PAYMENT_SECRET}`) {
+    return json({ success: false, message: "Unauthorized" }, 401, cors);
+  }
+
+  const authority = url.searchParams.get("authority") || "";
+
+  if (!authority) {
+    return json({
+      success: false,
+      message: "Authority نامعتبر است",
+    }, 400, cors);
+  }
+
+  const payment = await env.DB.prepare(`
+    SELECT status, ref_id, user_id, course_id, title, amount
+    FROM bot_payments
+    WHERE authority = ?
+    LIMIT 1
+  `).bind(authority).first();
+
+  if (!payment) {
+    return json({
+      success: false,
+      message: "تراکنش پیدا نشد",
+    }, 404, cors);
+  }
+
+  return json({
+    success: true,
+    payment,
+  }, 200, cors);
+}
+
+// =========================
 // ZARINPAL PAYMENT CALLBACK
 // =========================
 if (path === "/api/payments/callback" && request.method === "GET") {
