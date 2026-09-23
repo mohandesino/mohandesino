@@ -1066,6 +1066,7 @@ if (path === "/api/bot-payments/request" && request.method === "POST") {
       success: false,
       message: "خطا در ایجاد پرداخت",
       code: data?.code ?? null,
+      errors: paymentRequest.data?.errors ?? [],
     }, 502, cors);
   }
 
