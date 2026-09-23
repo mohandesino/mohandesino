@@ -954,8 +954,7 @@ if (path === "/api/payments/request" && request.method === "POST") {
 
   const paymentRequest = await zarinpalRequest("request", {
     merchant_id: merchantId,
-    amount,
-    currency: "IRT",
+    amount: amount * 10,
     description: `پرداخت دوره ${order.title}`,
     callback_url: callbackUrl,
     metadata: {
