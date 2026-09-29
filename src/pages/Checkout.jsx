@@ -86,11 +86,13 @@ function Checkout() {
 
     const normalizedCardLast4 = cardLast4
       .trim()
+      .normalize("NFKC")
+      .replace(/[^0-9۰-۹٠-٩]/g, "")
       .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
       .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 
-    if (!/^\d{4}$/.test(normalizedCardLast4)) {
-      alert("۴ رقم آخر کارت مبدا را وارد کنید.");
+    if (normalizedCardLast4.length !== 4) {
+      alert(`تعداد رقم‌های واردشده: ${normalizedCardLast4.length}`);
       return;
     }
 
