@@ -84,7 +84,7 @@ function Checkout() {
   const handleSubmitPayment = async () => {
     if (!paymentInfo?.order_id) return;
 
-    if (!/^\\d{4}$/.test(cardLast4.trim())) {
+    if (!/^\d{4}$/.test(cardLast4.trim())) {
       alert("۴ رقم آخر کارت مبدا را وارد کنید.");
       return;
     }
@@ -223,7 +223,7 @@ function Checkout() {
                   placeholder="۴ رقم آخر کارت مبدا *"
                   value={cardLast4}
                   onChange={(e) =>
-                    setCardLast4(e.target.value.replace(/\\D/g, "").slice(0, 4))
+                    setCardLast4(e.target.value.replace(/\D/g, "").slice(0, 4))
                   }
                 />
 
