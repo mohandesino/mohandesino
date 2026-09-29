@@ -86,7 +86,8 @@ function Checkout() {
 
     const normalizedCardLast4 = cardLast4
       .trim()
-      .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+      .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+      .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 
     if (!/^\d{4}$/.test(normalizedCardLast4)) {
       alert("۴ رقم آخر کارت مبدا را وارد کنید.");
@@ -230,7 +231,7 @@ function Checkout() {
                   onChange={(e) =>
                     setCardLast4(
                       e.target.value
-                        .replace(/[^0-9۰-۹]/g, "")
+                        .replace(/[^0-9۰-۹٠-٩]/g, "")
                         .slice(0, 4)
                     )
                   }
