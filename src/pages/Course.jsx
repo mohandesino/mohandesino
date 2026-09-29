@@ -64,7 +64,7 @@ function Course() {
               }
             } else {
               setIsPurchased(
-                course.isFree || Number(course.price) === 0
+                data.course.is_free || Number(data.course.price) === 0
                   ? localPurchased
                   : false
               );
@@ -73,14 +73,14 @@ function Course() {
             console.error("خطا در بررسی دوره‌های خریداری‌شده:", error);
 
             setIsPurchased(
-              course.isFree || Number(course.price) === 0
+              data.course.is_free || Number(data.course.price) === 0
                 ? localPurchased
                 : false
             );
           }
         } else {
           setIsPurchased(
-            course.isFree || Number(course.price) === 0
+            data.course.is_free || Number(data.course.price) === 0
               ? localPurchased
               : false
           );
@@ -106,7 +106,7 @@ function Course() {
       return;
     }
 
-    if (course.isFree || Number(course.price) === 0) {
+    if (data.course.is_free || Number(data.course.price) === 0) {
       const updated = [
         ...myCourses.filter((c) => String(c.id) !== String(course.id)),
         course,
@@ -177,7 +177,7 @@ function Course() {
               </div>
               <div className="course-purchase-box-modern">
                 <div className="course-price-modern">
-                  {course.isFree || Number(course.price) === 0 ? (
+                  {data.course.is_free || Number(data.course.price) === 0 ? (
                     <span className="free-price">🎁 رایگان</span>
                   ) : (
                     <>
@@ -192,7 +192,7 @@ function Course() {
                   </Link>
                 ) : (
                   <button onClick={handlePurchase} className="btn-purchase">
-                    {course.isFree || Number(course.price) === 0 ? "🎁 دریافت رایگان" : "💰 خرید دوره"}
+                    {data.course.is_free || Number(data.course.price) === 0 ? "🎁 دریافت رایگان" : "💰 خرید دوره"}
                   </button>
                 )}
               </div>
