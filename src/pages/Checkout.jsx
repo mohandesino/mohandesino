@@ -84,7 +84,11 @@ function Checkout() {
   const handleSubmitPayment = async () => {
     if (!paymentInfo?.order_id) return;
 
-    if (!/^\d{4}$/.test(cardLast4.trim())) {
+    const normalizedCardLast4 = cardLast4
+      .trim()
+      .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+
+    if (!/^\d{4}$/.test(normalizedCardLast4)) {
       alert("۴ رقم آخر کارت مبدا را وارد کنید.");
       return;
     }
@@ -101,7 +105,7 @@ function Checkout() {
         },
         body: JSON.stringify({
           order_id: Number(paymentInfo.order_id),
-          card_last4: cardLast4.trim(),
+          card_last4: normalizedCardLast4,
         }),
       });
 
@@ -224,7 +228,11 @@ function Checkout() {
                   placeholder="۴ رقم آخر کارت مبدا *"
                   value={cardLast4}
                   onChange={(e) =>
-                    setCardLast4(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    setCardLast4(
+                      e.target.value
+                        .replace(/[^0-9۰-۹]/g, "")
+                        .slice(0, 4)
+                    )
                   }
                 />
 

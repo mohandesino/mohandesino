@@ -12717,3 +12717,35 @@ input, textarea {
   font-size: 13px;
   color: #475569;
 }
+
+/* ===== CARD LAST 4 INPUT ===== */
+.card-to-card-info input[placeholder="۴ رقم آخر کارت مبدا *"] {
+  width: 100%;
+  box-sizing: border-box;
+  height: 56px;
+  padding: 0 18px;
+  margin-top: 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 4px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.card-to-card-info input[placeholder="۴ رقم آخر کارت مبدا *"]::placeholder {
+  color: #94a3b8;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.card-to-card-info input[placeholder="۴ رقم آخر کارت مبدا *"]:focus {
+  border-color: #6366f1;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
