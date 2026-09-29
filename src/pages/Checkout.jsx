@@ -208,11 +208,12 @@ function Checkout() {
                   مبلغ <strong>{Number(paymentInfo.amount).toLocaleString()} تومان</strong> را به یکی از کارت‌های زیر واریز کنید.
                 </p>
 
-                {paymentInfo.cards?.map((card, index) => (
-                  <div className="payment-card" key={index}>
-                    <strong>{card.bank}</strong>
-                    <div>{card.card_number}</div>
-                    <small>به نام: {card.holder}</small>
+                {paymentInfo.cards?.filter((card) => card.bank === "صادرات").map((card) => (
+                  <div className="payment-card" key={card.bank}>
+                    <div className="payment-card-bank">🏦 {card.bank}</div>
+                    <div className="payment-card-label">شماره کارت</div>
+                    <div className="payment-card-number">{card.card_number}</div>
+                    <div className="payment-card-holder">به نام: {card.holder}</div>
                   </div>
                 ))}
 

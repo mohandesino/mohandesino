@@ -12668,3 +12668,52 @@ input, textarea {
 }
 
 /* ===== END MOHANDESINO AUTH ===== */
+
+/* ===== CARD TO CARD PAYMENT ===== */
+.card-to-card-info {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.payment-card {
+  margin: 18px 0;
+  padding: 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  border: 1px solid #dbeafe;
+  text-align: right;
+}
+
+.payment-card-bank {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.payment-card-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.payment-card-number {
+  direction: ltr;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #1e293b;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.payment-card-holder {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #475569;
+}
