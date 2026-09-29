@@ -21,5 +21,12 @@
       "head_sampling_rate": 1,
       "persist": true
     }
+  },
+  "vars": {
+    "CARD_BANK_1": "صادرات",
+    "CARD_BANK_2": "سامان",
+    "CARD_HOLDER_NAME": "محمدرضا فاضلی‌نیا",
+    "CARD_TO_CARD_1": "6037698117239306",
+    "CARD_TO_CARD_2": "6219861846578432"
   }
 }
