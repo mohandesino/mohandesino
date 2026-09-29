@@ -940,71 +940,133 @@ if (path === "/api/payments/request" && request.method === "POST") {
     }, 400, cors);
   }
 
-  const merchantId = env.ZARINPAL_MERCHANT_ID;
+  return json({
+    success: true,
+    order_id: order.id,
+    course_title: order.title,
+    amount,
+    payment_method: "card_to_card",
+    cards: [
+      {
+        bank: env.CARD_BANK_1 || "",
+        card_number: env.CARD_TO_CARD_1 || "",
+        holder: env.CARD_HOLDER_NAME || "",
+      },
+      {
+        bank: env.CARD_BANK_2 || "",
+        card_number: env.CARD_TO_CARD_2 || "",
+        holder: env.CARD_HOLDER_NAME || "",
+      },
+    ],
+  }, 200, cors);
+}
 
-  if (!merchantId) {
+if (path === "/api/payments/submit" && request.method === "POST") {
+  const user = await getSessionUser(request, env);
+
+  if (!user) {
     return json({
       success: false,
-      message: "تنظیمات درگاه پرداخت انجام نشده است",
-    }, 500, cors);
+      message: "برای ثبت پرداخت باید وارد حساب شوید",
+    }, 401, cors);
   }
 
-  const callbackUrl =
-    "https://mohandesino-api.mohammadrezafazelinia92.workers.dev/api/payments/callback";
+  const body = await request.json().catch(() => null);
+  const orderId = Number(body?.order_id);
+  const refId = String(body?.ref_id || "").trim();
+  const payerName = String(body?.payer_name || "").trim();
+  const description = String(body?.description || "").trim();
 
-  const paymentRequest = await zarinpalRequest("request", {
-    merchant_id: merchantId,
-    amount: amount * 10,
-    description: `پرداخت دوره ${order.title}`,
-    callback_url: callbackUrl,
-    metadata: {
-      order_id: String(order.id),
-      mobile: user.phone || "",
-    },
-  });
-
-  const data = paymentRequest.data?.data;
-
-  if (!paymentRequest.ok || !data || Number(data.code) !== 100) {
+  if (!Number.isInteger(orderId) || orderId <= 0) {
     return json({
       success: false,
-      message: `ZARINPAL_RAW: ${paymentRequest.rawText || "EMPTY"}`,
-      code: data?.code ?? null,
-      errors: paymentRequest.data?.errors || [],
-      raw: paymentRequest.rawText,
-    }, 502, cors);
+      message: "شناسه سفارش نامعتبر است",
+    }, 400, cors);
   }
 
-  const authority = data.authority;
-
-  if (!authority) {
+  if (!refId) {
     return json({
       success: false,
-      message: "زرین‌پال شناسه تراکنش برنگرداند",
-    }, 502, cors);
+      message: "کد پیگیری انتقال را وارد کنید",
+    }, 400, cors);
+  }
+
+  const order = await env.DB
+    .prepare(`
+      SELECT id, user_id, amount, status
+      FROM orders
+      WHERE id = ?
+      LIMIT 1
+    `)
+    .bind(orderId)
+    .first();
+
+  if (!order) {
+    return json({
+      success: false,
+      message: "سفارش پیدا نشد",
+    }, 404, cors);
+  }
+
+  if (Number(order.user_id) !== Number(user.id)) {
+    return json({
+      success: false,
+      message: "این سفارش متعلق به شما نیست",
+    }, 403, cors);
+  }
+
+  if (order.status !== "pending") {
+    return json({
+      success: false,
+      message: "این سفارش در وضعیت قابل ثبت نیست",
+    }, 400, cors);
+  }
+
+  const existing = await env.DB
+    .prepare(`
+      SELECT id
+      FROM payments
+      WHERE order_id = ?
+      LIMIT 1
+    `)
+    .bind(orderId)
+    .first();
+
+  if (existing) {
+    return json({
+      success: false,
+      message: "برای این سفارش قبلاً اطلاعات پرداخت ثبت شده است",
+    }, 400, cors);
   }
 
   await env.DB
     .prepare(`
       INSERT INTO payments
-        (order_id, authority, amount, status, gateway)
-      VALUES (?, ?, ?, 'pending', 'zarinpal')
+        (order_id, authority, ref_id, amount, status, gateway, payer_name, description)
+      VALUES (?, '', ?, ?, 'waiting_verification', 'card_to_card', ?, ?)
     `)
-    .bind(order.id, authority, amount)
+    .bind(order.id, refId, Number(order.amount), payerName, description)
+    .run();
+
+  await env.DB
+    .prepare(`
+      UPDATE orders
+      SET status = 'waiting_verification'
+      WHERE id = ?
+    `)
+    .bind(order.id)
     .run();
 
   return json({
     success: true,
-    payment_url:
-      `https://payment.zarinpal.com/pg/StartPay/${authority}`,
-    authority,
+    message: "اطلاعات پرداخت با موفقیت ثبت شد و در انتظار بررسی است",
     order_id: order.id,
   }, 200, cors);
 }
 
-
 // =========================
 // BOT ZARINPAL PAYMENT
+// =========================
 // =========================
 if (path === "/api/bot-payments/request" && request.method === "POST") {
   const body = await request.json().catch(() => null);
