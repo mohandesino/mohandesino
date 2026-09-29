@@ -6,7 +6,27 @@ const ALLOWED_ORIGINS = [
   "http://127.0.0.1:5173",
         ];
 
-        export default {
+        async function ensureCardPaymentColumns(env) {
+  const columns = await env.DB
+    .prepare("PRAGMA table_info(payments)")
+    .all();
+
+  const names = new Set((columns.results || []).map((c) => c.name));
+
+  if (!names.has("card_last4")) {
+    await env.DB
+      .prepare("ALTER TABLE payments ADD COLUMN card_last4 TEXT DEFAULT ''")
+      .run();
+  }
+
+  if (!names.has("payment_declared_at")) {
+    await env.DB
+      .prepare("ALTER TABLE payments ADD COLUMN payment_declared_at TEXT DEFAULT ''")
+      .run();
+  }
+}
+
+export default {
           async fetch(request, env) {
               const origin = request.headers.get("Origin") || "";
 
@@ -33,6 +53,7 @@ const ALLOWED_ORIGINS = [
                                                                                                                             const path = url.pathname;
 
                                                                                                                                 try {
+      await ensureCardPaymentColumns(env);
                                                                                                                                       // =========================
                                                                                                                                             // TEST
                                                                                                                                                   // =========================
@@ -435,6 +456,130 @@ if (path === "/api/admin/logout" && request.method === "POST") {
   }
 
   return json({ success: true }, 200, cors);
+}
+
+// ADMIN: APPROVE ORDER PAYMENT
+if (path === "/api/admin/orders/approve" && request.method === "POST") {
+  const auth = await requireAdmin(request, env);
+  if (!auth.ok) return auth.response;
+
+  const body = await request.json().catch(() => null);
+  const orderId = Number(body?.order_id);
+
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return json({
+      success: false,
+      message: "شناسه سفارش نامعتبر است",
+    }, 400, cors);
+  }
+
+  const order = await env.DB
+    .prepare(`
+      SELECT
+        o.id,
+        o.user_id,
+        o.course_id,
+        o.status,
+        p.id AS payment_id,
+        p.status AS payment_status
+      FROM orders o
+      LEFT JOIN payments p ON p.order_id = o.id
+      WHERE o.id = ?
+      LIMIT 1
+    `)
+    .bind(orderId)
+    .first();
+
+  if (!order) {
+    return json({
+      success: false,
+      message: "سفارش پیدا نشد",
+    }, 404, cors);
+  }
+
+  if (order.status === "paid") {
+    return json({
+      success: true,
+      message: "این سفارش قبلاً تأیید شده است",
+    }, 200, cors);
+  }
+
+  if (order.status !== "waiting_verification" || !order.payment_id) {
+    return json({
+      success: false,
+      message: "این سفارش در انتظار تأیید پرداخت نیست",
+    }, 400, cors);
+  }
+
+  await env.DB
+    .prepare(`
+      UPDATE payments
+      SET status = 'paid',
+          paid_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `)
+    .bind(order.payment_id)
+    .run();
+
+  await env.DB
+    .prepare(`
+      UPDATE orders
+      SET status = 'paid'
+      WHERE id = ?
+    `)
+    .bind(order.id)
+    .run();
+
+  await env.DB
+    .prepare(`
+      INSERT OR IGNORE INTO enrollments
+        (user_id, course_id, order_id)
+      VALUES (?, ?, ?)
+    `)
+    .bind(order.user_id, order.course_id, order.id)
+    .run();
+
+  return json({
+    success: true,
+    message: "پرداخت تأیید شد و دسترسی دوره فعال شد",
+    order_id: order.id,
+  }, 200, cors);
+}
+
+// ADMIN: LIST ORDERS / PAYMENTS
+if (path === "/api/admin/orders" && request.method === "GET") {
+  const auth = await requireAdmin(request, env);
+  if (!auth.ok) return auth.response;
+
+  const { results } = await env.DB
+    .prepare(`
+      SELECT
+        o.id AS order_id,
+        o.user_id,
+        o.course_id,
+        o.amount,
+        o.status AS order_status,
+        o.created_at AS order_created_at,
+        u.name AS user_name,
+        u.phone AS user_phone,
+        c.title AS course_title,
+        p.id AS payment_id,
+        p.status AS payment_status,
+        p.card_last4,
+        p.payment_declared_at,
+        p.created_at AS payment_created_at
+      FROM orders o
+      INNER JOIN users u ON u.id = o.user_id
+      INNER JOIN courses c ON c.id = o.course_id
+      LEFT JOIN payments p ON p.order_id = o.id
+      ORDER BY o.id DESC
+    `)
+    .all();
+
+  return json({
+    success: true,
+    orders: results || [],
+  }, 200, cors);
 }
 
 // ADMIN: LIST COURSES
@@ -973,9 +1118,7 @@ if (path === "/api/payments/submit" && request.method === "POST") {
 
   const body = await request.json().catch(() => null);
   const orderId = Number(body?.order_id);
-  const refId = String(body?.ref_id || "").trim();
-  const payerName = String(body?.payer_name || "").trim();
-  const description = String(body?.description || "").trim();
+  const cardLast4 = String(body?.card_last4 || "").trim();
 
   if (!Number.isInteger(orderId) || orderId <= 0) {
     return json({
@@ -984,10 +1127,10 @@ if (path === "/api/payments/submit" && request.method === "POST") {
     }, 400, cors);
   }
 
-  if (!refId) {
+  if (!/^\\d{4}$/.test(cardLast4)) {
     return json({
       success: false,
-      message: "کد پیگیری انتقال را وارد کنید",
+      message: "۴ رقم آخر کارت مبدا را وارد کنید",
     }, 400, cors);
   }
 
@@ -1042,10 +1185,10 @@ if (path === "/api/payments/submit" && request.method === "POST") {
   await env.DB
     .prepare(`
       INSERT INTO payments
-        (order_id, authority, ref_id, amount, status, gateway, payer_name, description)
-      VALUES (?, '', ?, ?, 'waiting_verification', 'card_to_card', ?, ?)
+        (order_id, authority, ref_id, amount, status, gateway, card_last4, payment_declared_at)
+      VALUES (?, '', '', ?, 'waiting_verification', 'card_to_card', ?, CURRENT_TIMESTAMP)
     `)
-    .bind(order.id, refId, Number(order.amount), payerName, description)
+    .bind(order.id, Number(order.amount), cardLast4)
     .run();
 
   await env.DB

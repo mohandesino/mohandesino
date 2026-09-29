@@ -32,6 +32,7 @@ function AdminNew() {
 
   const [dashboard, setDashboard] = useState(null);
   const [courses, setCourses] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   const [loginPhone, setLoginPhone] = useState("");
@@ -468,11 +469,21 @@ function AdminNew() {
     }
   };
 
+  const loadOrders = async () => {
+    try {
+      const data = await api(`${API_BASE}/api/admin/orders`);
+      setOrders(data.orders || []);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
 
     loadDashboard();
     loadCourses();
+    loadOrders();
   }, [token]);
 
   if (!token) {
@@ -1152,10 +1163,100 @@ function AdminNew() {
         {section === "orders" && (
           <section className="admin-new-section">
             <div className="admin-new-card">
-              <h2>سفارش‌ها</h2>
-              <p className="admin-new-muted">
-                بخش سفارش‌ها و پرداخت‌ها در مرحله بعد به D1 متصل می‌شود.
-              </p>
+              <div className="admin-new-card-header">
+                <div>
+                  <h2>سفارش‌ها</h2>
+                  <p className="admin-new-muted">
+                    بررسی پرداخت‌های کارت‌به‌کارت
+                  </p>
+                </div>
+
+                <button
+                  className="admin-new-btn secondary"
+                  onClick={loadOrders}
+                  disabled={loading}
+                >
+                  بروزرسانی
+                </button>
+              </div>
+
+              {orders.length === 0 ? (
+                <p className="admin-new-muted">
+                  سفارشی برای نمایش وجود ندارد.
+                </p>
+              ) : (
+                <div className="admin-orders-list">
+                  {orders.map((order) => (
+                    <div className="admin-order-item" key={order.order_id}>
+                      <div>
+                        <strong>#{order.order_id} — {order.course_title}</strong>
+
+                        <p>
+                          کاربر: {order.user_name || "بدون نام"}
+                          {order.user_phone ? ` — ${order.user_phone}` : ""}
+                        </p>
+
+                        <p>
+                          مبلغ: {formatPrice(order.amount)} تومان
+                        </p>
+
+                        <p>
+                          ۴ رقم کارت مبدا: {order.card_last4 || "ثبت نشده"}
+                        </p>
+
+                        <p>
+                          زمان اعلام پرداخت:{" "}
+                          {order.payment_declared_at
+                            ? new Date(order.payment_declared_at).toLocaleString("fa-IR")
+                            : "ثبت نشده"}
+                        </p>
+
+                        <p>
+                          وضعیت: {order.order_status === "paid"
+                            ? "تأیید شده"
+                            : order.order_status === "waiting_verification"
+                              ? "در انتظار بررسی"
+                              : order.order_status}
+                        </p>
+                      </div>
+
+                      {order.order_status === "waiting_verification" && (
+                        <button
+                          className="admin-new-btn"
+                          disabled={loading}
+                          onClick={async () => {
+                            setLoading(true);
+
+                            try {
+                              const data = await api(
+                                `${API_BASE}/api/admin/orders/approve`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({
+                                    order_id: Number(order.order_id),
+                                  }),
+                                }
+                              );
+
+                              setMessage(data.message || "پرداخت تأیید شد.");
+                              await loadOrders();
+                            } catch (error) {
+                              setMessage(error.message);
+                            } finally {
+                              setLoading(false);
+                            }
+                          }}
+                        >
+                          تأیید پرداخت
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}

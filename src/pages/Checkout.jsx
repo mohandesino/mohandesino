@@ -9,9 +9,7 @@ function Checkout() {
   const [loading, setLoading] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
-  const [refId, setRefId] = useState("");
-  const [payerName, setPayerName] = useState("");
-  const [description, setDescription] = useState("");
+  const [cardLast4, setCardLast4] = useState("");
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -86,8 +84,8 @@ function Checkout() {
   const handleSubmitPayment = async () => {
     if (!paymentInfo?.order_id) return;
 
-    if (!refId.trim()) {
-      alert("کد پیگیری انتقال را وارد کنید.");
+    if (!/^\\d{4}$/.test(cardLast4.trim())) {
+      alert("۴ رقم آخر کارت مبدا را وارد کنید.");
       return;
     }
 
@@ -103,22 +101,20 @@ function Checkout() {
         },
         body: JSON.stringify({
           order_id: Number(paymentInfo.order_id),
-          ref_id: refId.trim(),
-          payer_name: payerName.trim(),
-          description: description.trim(),
+          card_last4: cardLast4.trim(),
         }),
       });
 
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data?.success) {
-        throw new Error(data?.message || "ثبت اطلاعات پرداخت ناموفق بود.");
+        throw new Error(data?.message || "ثبت پرداخت ناموفق بود.");
       }
 
       setPaymentComplete(true);
     } catch (error) {
       console.error("خطا در ثبت پرداخت:", error);
-      alert(error?.message || "خطایی در ثبت اطلاعات پرداخت رخ داد.");
+      alert(error?.message || "خطایی در ثبت پرداخت رخ داد.");
     } finally {
       setLoading(false);
     }
@@ -202,7 +198,7 @@ function Checkout() {
                 </button>
 
                 <p className="payment-secure">
-                  پس از انتقال وجه، کد پیگیری پرداخت را ثبت کنید.
+                  پس از انتقال وجه، روی «پرداخت کردم» بزنید و ۴ رقم آخر کارت مبدا را وارد کنید.
                 </p>
               </>
             ) : (
@@ -222,23 +218,13 @@ function Checkout() {
 
                 <input
                   type="text"
-                  placeholder="کد پیگیری انتقال *"
-                  value={refId}
-                  onChange={(e) => setRefId(e.target.value)}
-                />
-
-                <input
-                  type="text"
-                  placeholder="نام و نام خانوادگی پرداخت‌کننده (اختیاری)"
-                  value={payerName}
-                  onChange={(e) => setPayerName(e.target.value)}
-                />
-
-                <textarea
-                  placeholder="توضیحات (اختیاری)"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows="3"
+                  inputMode="numeric"
+                  maxLength="4"
+                  placeholder="۴ رقم آخر کارت مبدا *"
+                  value={cardLast4}
+                  onChange={(e) =>
+                    setCardLast4(e.target.value.replace(/\\D/g, "").slice(0, 4))
+                  }
                 />
 
                 <button
@@ -246,7 +232,7 @@ function Checkout() {
                   onClick={handleSubmitPayment}
                   disabled={loading}
                 >
-                  {loading ? 'در حال ثبت...' : '✅ ثبت اطلاعات پرداخت'}
+                  {loading ? 'در حال ثبت...' : '✅ پرداخت کردم'}
                 </button>
 
                 <p className="payment-secure">
