@@ -34,6 +34,16 @@ function AdminNew() {
   const [courses, setCourses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({
+    site_name: "",
+    phone: "",
+    address: "",
+    instagram: "",
+    telegram: "",
+    whatsapp: "",
+    about: "",
+    footer_text: "",
+  });
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   const [loginPhone, setLoginPhone] = useState("");
