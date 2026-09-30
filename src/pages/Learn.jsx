@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config.js";
 
 function Learn() {
   const { id } = useParams();
@@ -19,38 +20,123 @@ function Learn() {
       return;
     }
 
-    const saved = localStorage.getItem("mohandesino_courses");
-    const savedProgress = localStorage.getItem(`mohandesino_progress_${id}`);
+    const loadCourse = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/courses/${id}/full`);
+        const data = await response.json().catch(() => null);
 
-    if (saved) {
-      const all = JSON.parse(saved);
-      const found = all.find(c => c.id === id);
-      if (found) {
-        setCourse(found);
-        // محاسبه تعداد کل درس‌ها
-        const totalLessons = found.chapters?.reduce(
-          (t, ch) => t + (ch.lessons?.length || 0), 0
-        ) || 0;
-        
-        // بازیابی پیشرفت
-        if (savedProgress) {
-          setProgress(JSON.parse(savedProgress));
-        } else {
-          const initial = {
-            completed: [],
-            total: totalLessons,
-            lastLesson: null,
+        if (response.ok && data?.success && data.course) {
+          const fullCourse = {
+            ...data.course,
+            chapters: Array.isArray(data.chapters) ? data.chapters : [],
           };
-          setProgress(initial);
-          localStorage.setItem(`mohandesino_progress_${id}`, JSON.stringify(initial));
+
+          setCourse(fullCourse);
+
+          const totalLessons = fullCourse.chapters.reduce(
+            (t, ch) => t + (ch.lessons?.length || 0),
+            0
+          );
+
+          const savedProgress = localStorage.getItem(
+            `mohandesino_progress_${id}`
+          );
+
+          if (savedProgress) {
+            setProgress(JSON.parse(savedProgress));
+          } else {
+            const initial = {
+              completed: [],
+              total: totalLessons,
+              lastLesson: null,
+            };
+
+            setProgress(initial);
+            localStorage.setItem(
+              `mohandesino_progress_${id}`,
+              JSON.stringify(initial)
+            );
+          }
+
+          return;
         }
-      } else {
-        navigate("/courses");
+      } catch (error) {
+        console.error("خطا در دریافت دوره:", error);
       }
-    } else {
+
+      const saved = localStorage.getItem("mohandesino_courses");
+
+      if (saved) {
+        try {
+          const all = JSON.parse(saved);
+          const found = all.find(c => String(c.id) === String(id));
+
+          if (found) {
+            setCourse(found);
+
+            const totalLessons = found.chapters?.reduce(
+              (t, ch) => t + (ch.lessons?.length || 0),
+              0
+            ) || 0;
+
+            const savedProgress = localStorage.getItem(
+              `mohandesino_progress_${id}`
+            );
+
+            if (savedProgress) {
+              setProgress(JSON.parse(savedProgress));
+            } else {
+              const initial = {
+                completed: [],
+                total: totalLessons,
+                lastLesson: null,
+              };
+
+              setProgress(initial);
+              localStorage.setItem(
+                `mohandesino_progress_${id}`,
+                JSON.stringify(initial)
+              );
+            }
+
+            return;
+          }
+        } catch (error) {
+          console.error("خطا در خواندن دوره محلی:", error);
+        }
+      }
+
       navigate("/courses");
-    }
+    };
+
+    loadCourse();
   }, [id, navigate]);
+
+  // تبدیل لینک معمولی آپارات به لینک Embed
+  const getVideoSrc = (url) => {
+    if (!url) return "";
+
+    const value = String(url).trim();
+
+    if (value.includes("aparat.com")) {
+      const match = value.match(/aparat\.com\/v\/([^/?#]+)/i);
+      if (match) {
+        return `https://www.aparat.com/video/video/embed/videohash/${match[1]}/vt/frame`;
+      }
+    }
+
+    if (value.includes("youtube.com/watch?v=")) {
+      const id = new URL(value).searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+
+    if (value.includes("youtu.be/")) {
+      const id = value.split("youtu.be/")[1].split(/[?#]/)[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+
+    return value;
+  };
 
   // محاسبه درصد پیشرفت
   const completedCount = progress.completed?.length || 0;
@@ -155,7 +241,7 @@ function Learn() {
                   {currentLessonData.video.includes("youtube") || 
                    currentLessonData.video.includes("aparat") ? (
                     <iframe
-                      src={currentLessonData.video}
+                      src={getVideoSrc(currentLessonData.video)}
                       title={currentLessonData.title}
                       allowFullScreen
                       className="video-frame"
