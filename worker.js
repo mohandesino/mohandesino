@@ -582,6 +582,29 @@ if (path === "/api/admin/orders" && request.method === "GET") {
   }, 200, cors);
 }
 
+// ADMIN: LIST USERS
+if (path === "/api/admin/users" && request.method === "GET") {
+  const auth = await requireAdmin(request, env);
+  if (!auth.ok) return auth.response;
+
+  const { results } = await env.DB
+    .prepare(`
+      SELECT
+        id,
+        phone,
+        name,
+        is_admin
+      FROM users
+      ORDER BY id DESC
+    `)
+    .all();
+
+  return json({
+    success: true,
+    users: results || [],
+  }, 200, cors);
+}
+
 // ADMIN: LIST COURSES
 if (path === "/api/admin/courses" && request.method === "GET") {
   const auth = await requireAdmin(request, env);
