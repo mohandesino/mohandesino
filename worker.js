@@ -582,6 +582,67 @@ if (path === "/api/admin/orders" && request.method === "GET") {
   }, 200, cors);
 }
 
+// ADMIN: SITE SETTINGS
+if (path === "/api/admin/site-settings" && request.method === "GET") {
+  const auth = await requireAdmin(request, env);
+  if (!auth.ok) return auth.response;
+
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO site_settings (id)
+    VALUES (1)
+  `).run();
+
+  const settings = await env.DB
+    .prepare(`SELECT * FROM site_settings WHERE id = 1`)
+    .first();
+
+  return json({
+    success: true,
+    settings,
+  }, 200, cors);
+}
+
+if (path === "/api/admin/site-settings" && request.method === "PUT") {
+  const auth = await requireAdmin(request, env);
+  if (!auth.ok) return auth.response;
+
+  const body = await request.json();
+
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO site_settings (id)
+    VALUES (1)
+  `).run();
+
+  await env.DB.prepare(`
+    UPDATE site_settings
+    SET
+      site_name = ?,
+      phone = ?,
+      address = ?,
+      instagram = ?,
+      telegram = ?,
+      whatsapp = ?,
+      about = ?,
+      footer_text = ?,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = 1
+  `).bind(
+    String(body?.site_name || ""),
+    String(body?.phone || ""),
+    String(body?.address || ""),
+    String(body?.instagram || ""),
+    String(body?.telegram || ""),
+    String(body?.whatsapp || ""),
+    String(body?.about || ""),
+    String(body?.footer_text || "")
+  ).run();
+
+  return json({
+    success: true,
+    message: "تنظیمات سایت ذخیره شد.",
+  }, 200, cors);
+}
+
 // ADMIN: LIST USERS
 if (path === "/api/admin/users" && request.method === "GET") {
   const auth = await requireAdmin(request, env);
@@ -1242,6 +1303,19 @@ if (path === "/api/bot-payments/request" && request.method === "POST") {
   }
 
   await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      site_name TEXT DEFAULT 'مهندسینو',
+      phone TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      instagram TEXT DEFAULT '',
+      telegram TEXT DEFAULT '',
+      whatsapp TEXT DEFAULT '',
+      about TEXT DEFAULT '',
+      footer_text TEXT DEFAULT '',
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS bot_payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,

@@ -580,6 +580,11 @@ function AdminNew() {
             onClick={() => setSection("orders")}
           >
             سفارش‌ها
+          </button>\n\n          <button
+            className={section === "settings" ? "active" : ""}
+            onClick={() => setSection("settings")}
+          >
+            ⚙️ تنظیمات سایت
           </button>
         </nav>
 
@@ -600,6 +605,7 @@ function AdminNew() {
               {section === "courses" && "مدیریت دوره‌ها"}
               {section === "users" && "کاربران"}
               {section === "orders" && "سفارش‌ها"}
+              {section === "settings" && "تنظیمات سایت"}
             </h1>
 
             <span>مدیریت محتوای مهندسینو</span>
@@ -1214,6 +1220,124 @@ function AdminNew() {
                   </table>
                 </div>
               )}
+            </div>
+          </section>
+        )}
+
+        {section === "settings" && (
+          <section className="admin-new-section">
+            <div className="admin-new-card">
+              <div className="admin-new-card-header">
+                <div>
+                  <h2>تنظیمات سایت</h2>
+                  <p className="admin-new-muted">
+                    اطلاعات عمومی و ارتباطی سایت را از اینجا مدیریت کنید.
+                  </p>
+                </div>
+              </div>
+
+              <div className="admin-new-form-grid">
+                <div className="admin-new-field">
+                  <label>نام سایت</label>
+                  <input
+                    value={siteSettings.site_name}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, site_name: e.target.value })
+                    }
+                    placeholder="مهندسینو"
+                  />
+                </div>
+
+                <div className="admin-new-field">
+                  <label>شماره تماس</label>
+                  <input
+                    value={siteSettings.phone}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, phone: e.target.value })
+                    }
+                    placeholder="شماره تماس"
+                  />
+                </div>
+
+                <div className="admin-new-field admin-new-field-full">
+                  <label>آدرس</label>
+                  <input
+                    value={siteSettings.address}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, address: e.target.value })
+                    }
+                    placeholder="آدرس"
+                  />
+                </div>
+
+                <div className="admin-new-field">
+                  <label>اینستاگرام</label>
+                  <input
+                    value={siteSettings.instagram}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, instagram: e.target.value })
+                    }
+                    placeholder="لینک اینستاگرام"
+                  />
+                </div>
+
+                <div className="admin-new-field">
+                  <label>تلگرام</label>
+                  <input
+                    value={siteSettings.telegram}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, telegram: e.target.value })
+                    }
+                    placeholder="لینک تلگرام"
+                  />
+                </div>
+
+                <div className="admin-new-field">
+                  <label>واتساپ</label>
+                  <input
+                    value={siteSettings.whatsapp}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, whatsapp: e.target.value })
+                    }
+                    placeholder="لینک واتساپ"
+                  />
+                </div>
+
+                <div className="admin-new-field admin-new-field-full">
+                  <label>درباره ما</label>
+                  <textarea
+                    rows="6"
+                    value={siteSettings.about}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, about: e.target.value })
+                    }
+                    placeholder="متن درباره ما"
+                  />
+                </div>
+
+                <div className="admin-new-field admin-new-field-full">
+                  <label>متن فوتر</label>
+                  <textarea
+                    rows="4"
+                    value={siteSettings.footer_text}
+                    onChange={(e) =>
+                      setSiteSettings({ ...siteSettings, footer_text: e.target.value })
+                    }
+                    placeholder="متن پایین سایت"
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: "24px" }}>
+                <button
+                  type="button"
+                  className="admin-new-primary-button"
+                  onClick={saveSiteSettings}
+                  disabled={loading}
+                >
+                  {loading ? "در حال ذخیره..." : "ذخیره تنظیمات"}
+                </button>
+              </div>
             </div>
           </section>
         )}
