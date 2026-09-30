@@ -33,6 +33,7 @@ function AdminNew() {
   const [dashboard, setDashboard] = useState(null);
   const [courses, setCourses] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
   const [loginPhone, setLoginPhone] = useState("");
@@ -478,12 +479,23 @@ function AdminNew() {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const data = await api(`${API_BASE}/api/admin/users`);
+      setUsers(data.users || []);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
 
     loadDashboard();
     loadCourses();
     loadOrders();
+    loadUsers();
+    loadUsers();
   }, [token]);
 
   if (!token) {
@@ -1152,10 +1164,56 @@ function AdminNew() {
         {section === "users" && (
           <section className="admin-new-section">
             <div className="admin-new-card">
-              <h2>کاربران</h2>
-              <p className="admin-new-muted">
-                بخش مدیریت کاربران در مرحله بعد به API کاربران متصل می‌شود.
-              </p>
+              <div className="admin-new-card-header">
+                <div>
+                  <h2>کاربران</h2>
+                  <p className="admin-new-muted">
+                    فهرست کاربران ثبت‌نام‌شده در مهندسینو
+                  </p>
+                </div>
+                <span className="admin-new-badge">
+                  {users.length} کاربر
+                </span>
+              </div>
+
+              {users.length === 0 ? (
+                <div className="admin-new-empty">
+                  هنوز کاربری ثبت‌نام نکرده است.
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    marginTop: "20px"
+                  }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: "right", padding: "12px" }}>شناسه</th>
+                        <th style={{ textAlign: "right", padding: "12px" }}>نام</th>
+                        <th style={{ textAlign: "right", padding: "12px" }}>شماره موبایل</th>
+                        <th style={{ textAlign: "right", padding: "12px" }}>نقش</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => (
+                        <tr key={user.id}>
+                          <td style={{ padding: "12px" }}>#{user.id}</td>
+                          <td style={{ padding: "12px" }}>
+                            {user.name || "بدون نام"}
+                          </td>
+                          <td style={{ padding: "12px", direction: "ltr", textAlign: "right" }}>
+                            {user.phone || "-"}
+                          </td>
+                          <td style={{ padding: "12px" }}>
+                            {user.is_admin ? "مدیر" : "کاربر"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </section>
         )}
