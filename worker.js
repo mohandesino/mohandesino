@@ -1127,7 +1127,7 @@ if (path === "/api/payments/submit" && request.method === "POST") {
     }, 400, cors);
   }
 
-  if (!/^\\d{4}$/.test(cardLast4)) {
+  if (!/^\d{4}$/.test(cardLast4)) {
     return json({
       success: false,
       message: "۴ رقم آخر کارت مبدا را وارد کنید",
