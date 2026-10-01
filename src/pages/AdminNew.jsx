@@ -480,6 +480,39 @@ function AdminNew() {
     }
   };
 
+  const loadSiteSettings = async () => {
+    try {
+      const data = await api(`${API_BASE}/api/admin/site-settings`);
+      setSiteSettings((prev) => ({
+        ...prev,
+        ...(data?.settings || {}),
+      }));
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
+  const saveSiteSettings = async () => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const data = await api(`${API_BASE}/api/admin/site-settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(siteSettings),
+      });
+
+      setMessage(data?.message || "تنظیمات سایت ذخیره شد.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadOrders = async () => {
     try {
       const data = await api(`${API_BASE}/api/admin/orders`);
@@ -592,7 +625,10 @@ function AdminNew() {
             سفارش‌ها
           </button>\n\n          <button
             className={section === "settings" ? "active" : ""}
-            onClick={() => setSection("settings")}
+            onClick={() => {
+              setSection("settings");
+              loadSiteSettings();
+            }}
           >
             ⚙️ تنظیمات سایت
           </button>
