@@ -20,7 +20,10 @@ function Course() {
           return;
         }
 
-        setCourse(data.course);
+        setCourse({
+        ...data.course,
+        chapters: data.chapters || [],
+      });
 
         const savedMy = localStorage.getItem("mohandesino_my_courses");
         let localPurchased = false;
