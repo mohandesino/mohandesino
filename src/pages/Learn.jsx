@@ -251,6 +251,15 @@ function Learn() {
                       src={currentLessonData.video}
                       controls
                       className="video-player"
+                      onEnded={() => {
+                        if (currentLessonData?.id) {
+                          markLessonComplete(
+                            currentLessonData.chapterIndex,
+                            currentLessonData.lessonIndex,
+                            currentLessonData.id
+                          );
+                        }
+                      }}
                     />
                   )}
                 </div>
@@ -282,16 +291,7 @@ function Learn() {
                 {currentLesson + 1} از {allLessons.length}
               </span>
               <button 
-                onClick={() => {
-                  if (currentLessonData) {
-                    markLessonComplete(
-                      currentLessonData.chapterIndex,
-                      currentLessonData.lessonIndex,
-                      currentLessonData.id
-                    );
-                  }
-                  goToNext();
-                }}
+                onClick={goToNext}
                 disabled={currentLesson === allLessons.length - 1}
                 className="learn-nav-btn next"
               >
@@ -303,35 +303,51 @@ function Learn() {
           {/* ===== لیست دروس ===== */}
           <div className="learn-sidebar">
             <h3>📚 فهرست دروس</h3>
+
             <div className="learn-lessons-list">
-              {allLessons.map((item, index) => {
-                const isCompleted = progress.completed?.includes(item.id);
-                const isActive = index === currentLesson;
-                return (
-                  <div
-                    key={item.id}
-                    className={`learn-lesson-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                    onClick={() => {
-                      setCurrentLesson(index);
-                      setCurrentChapter(item.chapterIndex);
-                      // اگر کامل نشده بود، کامل کن
-                      if (!isCompleted) {
-                        markLessonComplete(
-                          item.chapterIndex,
-                          item.lessonIndex,
-                          item.id
-                        );
-                      }
-                    }}
-                  >
-                    <span className="lesson-status">
-                      {isCompleted ? '✅' : (isActive ? '▶' : '○')}
-                    </span>
-                    <span className="lesson-title">{item.title}</span>
-                    {isCompleted && <span className="lesson-check">✓</span>}
+              {course.chapters?.map((chapter, chapterIndex) => (
+                <div className="learn-chapter-group" key={chapter.id || chapterIndex}>
+
+                  <div className="learn-chapter-title">
+                    فصل {chapterIndex + 1}: {chapter.title}
                   </div>
-                );
-              })}
+
+                  <div className="learn-chapter-lessons">
+                    {chapter.lessons?.map((lesson, lessonIndex) => {
+                      const flatIndex = allLessons.findIndex(
+                        item => String(item.id) === String(lesson.id)
+                      );
+
+                      const isCompleted = progress.completed?.includes(lesson.id);
+                      const isActive = flatIndex === currentLesson;
+
+                      return (
+                        <div
+                          key={lesson.id || lessonIndex}
+                          className={`learn-lesson-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                          onClick={() => {
+                            setCurrentLesson(flatIndex);
+                            setCurrentChapter(chapterIndex);
+                          }}
+                        >
+                          <span className="lesson-status">
+                            {isCompleted ? '✅' : (isActive ? '▶' : '○')}
+                          </span>
+
+                          <span className="lesson-title">
+                            {lesson.title}
+                          </span>
+
+                          {isCompleted && (
+                            <span className="lesson-check">✓</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                </div>
+              ))}
             </div>
           </div>
 
