@@ -187,7 +187,10 @@ function AdminNew() {
 
     try {
       const data = await api(`${API_BASE}/api/courses/${courseId}/full`);
-      setSelectedCourse(data);
+      setSelectedCourse({
+        ...(data.course || {}),
+        chapters: data.chapters || [],
+      });
       setSection("courses");
     } catch (error) {
       setMessage(error.message);
