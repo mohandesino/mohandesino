@@ -494,7 +494,7 @@ function AdminNew() {
 
   const saveSiteSettings = async () => {
     setLoading(true);
-    setMessage("");
+    setMessage("در حال ذخیره تنظیمات...");
 
     try {
       const data = await api(`${API_BASE}/api/admin/site-settings`, {
@@ -505,9 +505,9 @@ function AdminNew() {
         body: JSON.stringify(siteSettings),
       });
 
-      setMessage(data?.message || "تنظیمات سایت ذخیره شد.");
+      setMessage(data?.message || "تنظیمات سایت با موفقیت ذخیره شد.");
     } catch (error) {
-      setMessage(error.message);
+      setMessage("خطا در ذخیره تنظیمات: " + error.message);
     } finally {
       setLoading(false);
     }
