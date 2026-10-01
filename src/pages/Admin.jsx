@@ -51,7 +51,7 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
     aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده و مفهومی است.",
     teacherTitle: "مدرس و تولیدکننده محتوای آموزشی مهندسینو", // ===== جدید
     telegram: "https://t.me/mohandesino2026",
-    instagram: "https://instagram.com/mohandesino",
+    instagram: "https://instagram.com/mohandesino.iran",
     email: "info@mohandesino.ir",
     phone: "۰۲۱-۱۲۳۴۵۶۷۸",
     address: "",

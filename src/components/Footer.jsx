@@ -8,7 +8,7 @@ function Footer() {
     siteTitle: "مهندسینو",
     aboutText: "مهندسینو یک پلتفرم آموزشی برای یادگیری ساده و مفهومی ریاضی و فیزیک است.",
     telegram: "https://t.me/mohandesino2026",
-    instagram: "https://instagram.com/mohandesino",
+    instagram: "https://instagram.com/mohandesino.iran",
     email: "info@mohandesino.ir",
     phone: "۰۲۱-۱۲۳۴۵۶۷۸",
     address: "",

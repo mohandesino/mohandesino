@@ -64,7 +64,7 @@ function Home() {
         aboutText: "آموزش‌هایی که به‌جای حفظ فرمول، کمک می‌کنند واقعاً مطلب را بفهمی.",
         teacherTitle: "مدرس و تولیدکننده محتوای آموزشی مهندسینو",
         telegram: "https://t.me/mohandesino2026",
-        instagram: "https://instagram.com/mohandesino",
+        instagram: "https://instagram.com/mohandesino.iran",
         email: "info@mohandesino.ir",
         phone: "۰۲۱-۱۲۳۴۵۶۷۸"
       };
