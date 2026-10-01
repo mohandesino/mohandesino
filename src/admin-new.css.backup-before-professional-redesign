@@ -1,0 +1,1753 @@
+/* =========================================================
+   MOHANDESINO ADMIN PANEL
+   Clean / Modern / RTL
+   ========================================================= */
+
+.admin-new-page {
+  min-height: 100vh;
+  display: flex;
+  direction: rtl;
+  background: #f7f8fa;
+  color: #172033;
+  font-family: inherit;
+}
+
+/* =========================
+   SIDEBAR
+   ========================= */
+
+.admin-new-sidebar {
+  width: 238px;
+  min-height: 100vh;
+  flex: 0 0 238px;
+  background: #ffffff;
+  border-left: 1px solid #eaecf0;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  box-sizing: border-box;
+}
+
+.admin-new-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 10px 22px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.admin-new-brand strong {
+  font-size: 19px;
+  font-weight: 900;
+  color: #161b26;
+}
+
+.admin-new-brand span {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.admin-new-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.admin-new-sidebar nav button {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #667085;
+  padding: 0 13px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.admin-new-sidebar nav button:hover {
+  background: #f7f8fa;
+  color: #344054;
+}
+
+.admin-new-sidebar nav button.active {
+  background: #fff8dc;
+  color: #795d00;
+  font-weight: 800;
+}
+
+.admin-new-sidebar-bottom {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.admin-new-admin-name {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.admin-new-sidebar-bottom button {
+  width: 100%;
+  border: 1px solid #eaecf0;
+  background: #fff;
+  color: #667085;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.admin-new-sidebar-bottom button:hover {
+  background: #f9fafb;
+  color: #344054;
+}
+
+/* =========================
+   MAIN
+   ========================= */
+
+.admin-new-main {
+  flex: 1;
+  min-width: 0;
+  background: #f7f8fa;
+}
+
+.admin-new-header {
+  min-height: 78px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-bottom: 1px solid #eaecf0;
+  padding: 16px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-new-header h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #161b26;
+}
+
+.admin-new-header span {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.admin-new-loading {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+/* =========================
+   COMMON CONTENT
+   ========================= */
+
+.admin-new-body {
+  width: 100%;
+  max-width: 1250px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 26px 30px 40px;
+}
+
+.admin-new-welcome {
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+.admin-new-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 18px;
+}
+
+.admin-new-stat,
+.admin-new-stat-card {
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  padding: 17px;
+  box-sizing: border-box;
+}
+
+.admin-new-section,
+.admin-new-panel {
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.admin-new-card {
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.admin-new-card-head,
+.admin-new-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 17px 20px;
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.admin-new-panel-header {
+  margin: 0;
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.admin-new-primary,
+.admin-new-primary-btn {
+  border: 0;
+  border-radius: 9px;
+  background: #f2c94c;
+  color: #3d3000;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.admin-new-primary:hover,
+.admin-new-primary-btn:hover {
+  background: #edc23b;
+  transform: translateY(-1px);
+}
+
+.admin-new-secondary,
+.admin-new-secondary-btn {
+  border: 1px solid #e4e7ec;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #475467;
+  padding: 8px 13px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.admin-new-secondary:hover,
+.admin-new-secondary-btn:hover {
+  background: #f9fafb;
+}
+
+.admin-new-danger {
+  border: 1px solid #f3d0ce;
+  border-radius: 9px;
+  background: #fffafa;
+  color: #b42318;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =========================
+   COURSES
+   ========================= */
+
+.admin-new-course-list {
+  background: #ffffff;
+}
+
+.admin-new-course-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 19px;
+  border-bottom: 1px solid #f0f1f3;
+  transition: background .15s ease;
+}
+
+.admin-new-course-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-new-course-row:hover {
+  background: #fcfcfd;
+}
+
+.admin-new-course-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-new-course-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.admin-new-course-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 11px;
+  background: #fff8dc;
+  color: #8a6900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-new-course-info {
+  min-width: 0;
+}
+
+.admin-new-course-description {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.admin-new-course-price {
+  color: #475467;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* =========================
+   CHAPTERS / LESSONS
+   ========================= */
+
+.admin-new-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-new-chapter {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-new-chapter-head,
+.admin-new-chapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+}
+
+.admin-new-chapter-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #344054;
+}
+
+.admin-new-chapter-meta {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.admin-new-lessons {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-new-lesson {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  border-top: 1px solid #f0f1f3;
+}
+
+.admin-new-lesson-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-new-lesson-number {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 8px;
+  background: #f7f8fa;
+  color: #667085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* =========================
+   FORMS
+   ========================= */
+
+.admin-new-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-new-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-new-form-group label {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-new-form-group input,
+.admin-new-form-group textarea,
+.admin-new-form-group select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  padding: 10px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: .18s ease;
+}
+
+.admin-new-form-group input:focus,
+.admin-new-form-group textarea:focus,
+.admin-new-form-group select:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+.admin-new-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.admin-new-inline-form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.admin-new-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+
+.admin-new-full {
+  grid-column: 1 / -1;
+}
+
+.admin-new-number {
+  direction: ltr;
+}
+
+/* =========================
+   STATES / TEXT
+   ========================= */
+
+.admin-new-message {
+  margin: 11px 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: #fff8ed;
+  border: 1px solid #f6dfc1;
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.admin-new-message-top {
+  margin-bottom: 14px;
+}
+
+.admin-new-muted {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.admin-new-empty,
+.admin-new-empty-small {
+  padding: 30px 20px;
+  text-align: center;
+  color: #98a2b3;
+  font-size: 12px;
+}
+
+/* =========================
+   LOGIN
+   ========================= */
+
+.admin-new-login {
+  width: min(390px, calc(100% - 32px));
+  margin: auto;
+  padding: 30px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 17px;
+  box-shadow: 0 12px 35px rgba(16, 24, 40, .06);
+}
+
+.admin-new-login-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f2c94c;
+  color: #3d3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 17px;
+}
+
+.admin-new-login h1 {
+  margin: 0 0 7px;
+  font-size: 20px;
+  color: #161b26;
+}
+
+.admin-new-login p {
+  margin: 0 0 22px;
+  color: #98a2b3;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.admin-new-login form {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-new-login form label {
+  margin-bottom: 6px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-new-login form input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  padding: 11px 12px;
+  background: #fff;
+  font-family: inherit;
+  outline: none;
+}
+
+.admin-new-login form input:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+.admin-new-login form button {
+  border: 0;
+  border-radius: 9px;
+  padding: 11px 14px;
+  background: #f2c94c;
+  color: #3d3000;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
+  .admin-new-page {
+    display: block;
+  }
+
+  .admin-new-sidebar {
+    width: 100%;
+    min-height: auto;
+    position: static;
+    border-left: 0;
+    border-bottom: 1px solid #eaecf0;
+  }
+
+  .admin-new-sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .admin-new-sidebar-bottom {
+    margin-top: 14px;
+  }
+
+  .admin-new-body {
+    padding: 22px 18px 32px;
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-new-header {
+    padding: 14px 16px;
+  }
+
+  .admin-new-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-new-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-new-full {
+    grid-column: auto;
+  }
+
+  .admin-new-sidebar nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-new-course-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .admin-new-course-actions {
+    width: 100%;
+  }
+
+  .admin-new-login {
+    padding: 24px;
+  }
+}
+
+/* =========================================================
+   COURSES - POLISHED UI
+   ========================================================= */
+
+.admin-new-chapters {
+  gap: 14px;
+}
+
+.admin-new-chapter {
+  border: 1px solid #e3e6eb;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, .025);
+}
+
+.admin-new-chapter-head {
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 13px 16px;
+  background: #fcfcfd;
+}
+
+.admin-new-chapter-head > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-new-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #fff5c9;
+  color: #755b00;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-new-chapter-head strong {
+  color: #1d2939;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-new-chapter-head small {
+  color: #98a2b3;
+  font-size: 11px;
+  margin-right: 2px;
+}
+
+.admin-new-lessons {
+  background: #fff;
+}
+
+.admin-new-lesson {
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  gap: 12px;
+  border-top: 1px solid #f0f1f3;
+  transition: background .15s ease;
+}
+
+.admin-new-lesson:hover {
+  background: #fafbfc;
+}
+
+.admin-new-lesson-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 8px;
+  background: #f4f5f7;
+  color: #667085;
+  font-size: 10px;
+}
+
+.admin-new-lesson-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-new-lesson-info strong {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.admin-new-lesson-info span {
+  color: #98a2b3;
+  font-size: 10px;
+}
+
+.admin-new-lesson-info span::first-letter {
+  color: #667085;
+}
+
+/* Course action buttons */
+.admin-new-course-actions {
+  gap: 6px;
+}
+
+.admin-new-course-actions .admin-new-secondary,
+.admin-new-course-actions .admin-new-danger {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+/* Add / edit chapter */
+.admin-new-inline-form {
+  padding-top: 2px;
+}
+
+.admin-new-inline-form input {
+  flex: 1;
+  min-width: 220px;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  padding: 10px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: .18s ease;
+}
+
+.admin-new-inline-form input:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+/* Lesson form */
+.admin-new-form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-new-form-grid > div > label {
+  color: #344054;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-new-form-grid input,
+.admin-new-form-grid select,
+.admin-new-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  padding: 10px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: .18s ease;
+}
+
+.admin-new-form-grid textarea {
+  min-height: 82px;
+  resize: vertical;
+  line-height: 1.8;
+}
+
+.admin-new-form-grid input:focus,
+.admin-new-form-grid select:focus,
+.admin-new-form-grid textarea:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+/* Video URL */
+.admin-new-form-grid input[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  color: #475467;
+}
+
+.admin-new-form-grid input[dir="ltr"]::placeholder {
+  color: #98a2b3;
+}
+
+/* Free lesson checkbox */
+.admin-new-check {
+  width: fit-content;
+  margin-top: 3px;
+  padding: 8px 11px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+  color: #475467;
+  cursor: pointer;
+}
+
+.admin-new-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: #d9b53e;
+}
+
+/* Main save button */
+.admin-new-form-grid + .admin-new-primary {
+  margin-top: 16px;
+  min-width: 130px;
+}
+
+/* Empty lesson state */
+.admin-new-empty-small {
+  padding: 18px 15px;
+  background: #fcfcfd;
+  font-size: 11px;
+}
+
+/* Mobile course details */
+@media (max-width: 650px) {
+  .admin-new-chapter-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-new-chapter-head > div:first-child {
+    width: 100%;
+  }
+
+  .admin-new-chapter-head .admin-new-course-actions {
+    width: auto;
+  }
+
+  .admin-new-lesson {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .admin-new-lesson-info {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .admin-new-lesson .admin-new-course-actions {
+    width: 100%;
+    margin-right: 42px;
+  }
+
+  .admin-new-inline-form input {
+    min-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   COURSES - POLISHED UI
+   ========================================================= */
+
+.admin-new-chapters {
+  gap: 14px;
+}
+
+.admin-new-chapter {
+  border: 1px solid #e3e6eb;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, .025);
+}
+
+.admin-new-chapter-head {
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 13px 16px;
+  background: #fcfcfd;
+}
+
+.admin-new-chapter-head > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.admin-new-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #fff5c9;
+  color: #755b00;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-new-chapter-head strong {
+  color: #1d2939;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-new-chapter-head small {
+  color: #98a2b3;
+  font-size: 11px;
+  margin-right: 2px;
+}
+
+.admin-new-lessons {
+  background: #fff;
+}
+
+.admin-new-lesson {
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  gap: 12px;
+  border-top: 1px solid #f0f1f3;
+  transition: background .15s ease;
+}
+
+.admin-new-lesson:hover {
+  background: #fafbfc;
+}
+
+.admin-new-lesson-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 8px;
+  background: #f4f5f7;
+  color: #667085;
+  font-size: 10px;
+}
+
+.admin-new-lesson-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-new-lesson-info strong {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.admin-new-lesson-info span {
+  color: #98a2b3;
+  font-size: 10px;
+}
+
+.admin-new-course-actions {
+  gap: 6px;
+}
+
+.admin-new-course-actions .admin-new-secondary,
+.admin-new-course-actions .admin-new-danger {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.admin-new-inline-form {
+  padding-top: 2px;
+}
+
+.admin-new-inline-form input {
+  flex: 1;
+  min-width: 220px;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  padding: 10px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: .18s ease;
+}
+
+.admin-new-inline-form input:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+.admin-new-form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-new-form-grid > div > label {
+  color: #344054;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-new-form-grid input,
+.admin-new-form-grid select,
+.admin-new-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  padding: 10px 11px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: .18s ease;
+}
+
+.admin-new-form-grid textarea {
+  min-height: 82px;
+  resize: vertical;
+  line-height: 1.8;
+}
+
+.admin-new-form-grid input:focus,
+.admin-new-form-grid select:focus,
+.admin-new-form-grid textarea:focus {
+  border-color: #d9b53e;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, .12);
+}
+
+.admin-new-form-grid input[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  color: #475467;
+}
+
+.admin-new-check {
+  width: fit-content;
+  margin-top: 3px;
+  padding: 8px 11px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+  color: #475467;
+  cursor: pointer;
+}
+
+.admin-new-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: #d9b53e;
+}
+
+.admin-new-form-grid + .admin-new-primary {
+  margin-top: 16px;
+  min-width: 130px;
+}
+
+.admin-new-empty-small {
+  padding: 18px 15px;
+  background: #fcfcfd;
+  font-size: 11px;
+}
+
+@media (max-width: 650px) {
+  .admin-new-chapter-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-new-chapter-head > div:first-child {
+    width: 100%;
+  }
+
+  .admin-new-chapter-head .admin-new-course-actions {
+    width: auto;
+  }
+
+  .admin-new-lesson {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .admin-new-lesson-info {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .admin-new-lesson .admin-new-course-actions {
+    width: 100%;
+    margin-right: 42px;
+  }
+
+  .admin-new-inline-form input {
+    min-width: 100%;
+  }
+}
+
+
+/* ===== Chapters — Professional UI ===== */
+.admin-new-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-new-chapter {
+  background: #fff;
+  border: 1px solid #e7e9ee;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.admin-new-chapter:hover {
+  border-color: #d5d9e2;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.admin-new-chapter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-new-chapter-head > div:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-new-chapter-head strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.admin-new-chapter-head small {
+  font-size: 12px;
+  color: #8a93a3;
+}
+
+.admin-new-inline-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  background: #f8f9fb;
+  border: 1px solid #e8ebf0;
+  border-radius: 12px;
+}
+
+.admin-new-inline-form input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #dfe3ea;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-new-inline-form input:focus {
+  border-color: #f2b400;
+  box-shadow: 0 0 0 3px rgba(242, 180, 0, 0.12);
+}
+
+.admin-new-inline-form .admin-new-primary {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 9px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .admin-new-inline-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-new-inline-form .admin-new-primary {
+    width: 100%;
+  }
+
+  .admin-new-chapter {
+    padding: 14px;
+  }
+
+  .admin-new-chapter-head {
+    align-items: flex-start;
+  }
+}
+
+
+/* =========================================================
+   MOHANDESINO ADMIN — MODERN REDESIGN v1
+   Visual-only override
+   ========================================================= */
+
+.admin-new-page {
+  background: #f5f7fb;
+  color: #172033;
+}
+
+/* =========================
+   SIDEBAR
+   ========================= */
+
+.admin-new-sidebar {
+  width: 255px;
+  flex: 0 0 255px;
+  padding: 20px 13px;
+  background: #101827;
+  border-left: 0;
+  box-shadow: 8px 0 30px rgba(15, 23, 42, .08);
+}
+
+.admin-new-brand {
+  padding: 8px 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.admin-new-brand strong {
+  color: #fff;
+  font-size: 20px;
+  letter-spacing: -.3px;
+}
+
+.admin-new-brand span {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.admin-new-sidebar nav {
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.admin-new-sidebar nav button {
+  min-height: 48px;
+  border-radius: 12px;
+  color: #aeb9ca;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.admin-new-sidebar nav button:hover {
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+.admin-new-sidebar nav button.active {
+  background: linear-gradient(135deg, #f2a900, #f6c343);
+  color: #1d2735;
+  box-shadow: 0 8px 20px rgba(242,169,0,.18);
+}
+
+.admin-new-sidebar-bottom {
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.09);
+}
+
+.admin-new-admin-name {
+  color: #e2e8f0;
+  font-size: 12px;
+}
+
+.admin-new-sidebar-bottom button {
+  border-color: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.05);
+  color: #aeb9ca;
+  border-radius: 10px;
+}
+
+.admin-new-sidebar-bottom button:hover {
+  background: rgba(255,255,255,.09);
+  color: #fff;
+}
+
+/* =========================
+   MAIN / HEADER
+   ========================= */
+
+.admin-new-main {
+  background: #f5f7fb;
+}
+
+.admin-new-header {
+  min-height: 82px;
+  background: rgba(255,255,255,.94);
+  border-bottom: 1px solid #e8ecf2;
+  padding: 17px 32px;
+  box-shadow: 0 2px 12px rgba(15,23,42,.025);
+}
+
+.admin-new-header h1 {
+  font-size: 21px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.admin-new-header span {
+  color: #8a94a6;
+}
+
+/* =========================
+   BODY
+   ========================= */
+
+.admin-new-body {
+  max-width: 1380px;
+  padding: 30px 32px 50px;
+}
+
+/* =========================
+   STAT CARDS
+   ========================= */
+
+.admin-new-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-new-stat {
+  position: relative;
+  min-height: 128px;
+  padding: 21px;
+  border: 1px solid #e7ebf1;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 5px 20px rgba(15,23,42,.045);
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.admin-new-stat::after {
+  content: "";
+  position: absolute;
+  left: -25px;
+  bottom: -35px;
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: rgba(242,169,0,.08);
+}
+
+.admin-new-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15,23,42,.08);
+}
+
+.admin-new-stat span {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: #7b8798;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 13px;
+}
+
+.admin-new-stat strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: #111827;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+}
+
+/* =========================
+   CARDS / SECTIONS
+   ========================= */
+
+.admin-new-section,
+.admin-new-panel,
+.admin-new-card {
+  border-color: #e7ebf1;
+  border-radius: 17px;
+}
+
+.admin-new-card {
+  box-shadow: 0 5px 20px rgba(15,23,42,.035);
+}
+
+.admin-new-card-head,
+.admin-new-panel-header {
+  padding: 20px 22px;
+}
+
+.admin-new-card-head h2,
+.admin-new-panel-header h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.admin-new-card-head p {
+  margin: 6px 0 0;
+  color: #8a94a6;
+  font-size: 11px;
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.admin-new-primary,
+.admin-new-primary-btn {
+  min-height: 42px;
+  border-radius: 11px;
+  padding: 0 17px;
+  background: linear-gradient(135deg, #f2a900, #f6c343);
+  color: #202a38;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 6px 15px rgba(242,169,0,.16);
+}
+
+.admin-new-primary:hover,
+.admin-new-primary-btn:hover {
+  background: linear-gradient(135deg, #e99f00, #f1b832);
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(242,169,0,.22);
+}
+
+.admin-new-secondary,
+.admin-new-secondary-btn {
+  min-height: 38px;
+  border-radius: 10px;
+  border-color: #e1e6ee;
+  color: #475467;
+  font-weight: 800;
+}
+
+.admin-new-secondary:hover,
+.admin-new-secondary-btn:hover {
+  background: #f8fafc;
+  border-color: #cfd6e1;
+  transform: translateY(-1px);
+}
+
+.admin-new-danger {
+  min-height: 38px;
+  border-radius: 10px;
+  background: #fff8f7;
+  border-color: #f3d0ce;
+  color: #b42318;
+  font-weight: 800;
+}
+
+/* =========================
+   FORMS
+   ========================= */
+
+.admin-new-form-grid {
+  gap: 17px;
+}
+
+.admin-new-form-group {
+  gap: 7px;
+}
+
+.admin-new-form-group label {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-new-form-group input,
+.admin-new-form-group textarea,
+.admin-new-form-group select,
+.admin-new-inline-form input {
+  min-height: 43px;
+  border: 1px solid #dce2ea;
+  border-radius: 11px;
+  background: #fff;
+  padding: 10px 12px;
+  font-size: 12px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.admin-new-form-group input:hover,
+.admin-new-form-group textarea:hover,
+.admin-new-form-group select:hover {
+  border-color: #c7cfda;
+}
+
+.admin-new-form-group input:focus,
+.admin-new-form-group textarea:focus,
+.admin-new-form-group select:focus,
+.admin-new-inline-form input:focus {
+  border-color: #e6ad1e;
+  box-shadow: 0 0 0 4px rgba(242,169,0,.11);
+}
+
+/* =========================
+   COURSES
+   ========================= */
+
+.admin-new-course-row {
+  padding: 17px 20px;
+  transition: background .18s ease, transform .18s ease;
+}
+
+.admin-new-course-row:hover {
+  background: #fafbfc;
+}
+
+.admin-new-course-icon {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #fff3c4, #fff9e8);
+  color: #9a7000;
+  font-size: 19px;
+  box-shadow: inset 0 0 0 1px rgba(242,169,0,.12);
+}
+
+.admin-new-course-main strong {
+  color: #172033;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-new-course-description {
+  margin-top: 4px;
+  color: #8a94a6;
+}
+
+.admin-new-course-price {
+  color: #344054;
+  font-weight: 900;
+}
+
+/* =========================
+   CHAPTERS / LESSONS
+   ========================= */
+
+.admin-new-chapter {
+  border-color: #e4e9f0;
+  box-shadow: 0 5px 18px rgba(15,23,42,.035);
+}
+
+.admin-new-chapter-head {
+  background: #fafbfc;
+}
+
+.admin-new-number {
+  background: #fff3c4;
+  color: #8a6500;
+}
+
+.admin-new-lesson {
+  min-height: 62px;
+}
+
+.admin-new-lesson:hover {
+  background: #f9fafc;
+}
+
+.admin-new-lesson-number {
+  background: #f1f4f8;
+  color: #596579;
+}
+
+/* =========================
+   MESSAGES
+   ========================= */
+
+.admin-new-message {
+  border-radius: 11px;
+  padding: 11px 13px;
+  box-shadow: 0 4px 12px rgba(15,23,42,.03);
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 900px) {
+  .admin-new-sidebar {
+    width: 100%;
+    padding: 14px;
+    background: #101827;
+  }
+
+  .admin-new-brand {
+    padding: 7px 9px 14px;
+  }
+
+  .admin-new-sidebar nav {
+    margin-top: 14px;
+    gap: 7px;
+  }
+
+  .admin-new-sidebar nav button {
+    min-height: 45px;
+  }
+
+  .admin-new-body {
+    padding: 22px 16px 35px;
+  }
+
+  .admin-new-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-new-header {
+    min-height: 72px;
+    padding: 14px 16px;
+  }
+
+  .admin-new-header h1 {
+    font-size: 18px;
+  }
+
+  .admin-new-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .admin-new-stat {
+    min-height: 105px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .admin-new-stat strong {
+    font-size: 21px;
+  }
+
+  .admin-new-card-head,
+  .admin-new-panel-header {
+    padding: 16px;
+  }
+
+  .admin-new-card-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-new-card-head .admin-new-primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-new-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-new-sidebar nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-new-course-actions {
+    gap: 5px;
+  }
+}
+

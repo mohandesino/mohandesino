@@ -689,7 +689,6 @@ const [lessonSortOrder, setLessonSortOrder] = useState(1);
 
             {/* ===== نمایش/مخفی کردن FAQ ===== */}
             <div className="admin-field-half">
-              <label>نمایش سوالات متداول در منو</label>
               <select
                 name="showFaq"
                 value={settings.showFaq !== false ? "yes" : "no"}

@@ -92,13 +92,9 @@ function Header() {
           <Link to="/courses" className={isActive("/courses")} onClick={closeMenu}>دوره‌ها</Link>
           <Link to="/my-courses" className={isActive("/my-courses")} onClick={closeMenu}>دوره‌های من</Link>
           <Link to="/about" className={isActive("/about")} onClick={closeMenu}>درباره ما</Link>
-          <Link to="/contact" className={isActive("/contact")} onClick={closeMenu}>تماس با ما</Link>
-          <Link to="/blog" className={isActive("/blog")} onClick={closeMenu}>مجله</Link>
           
           {/* ===== جدید: نمایش FAQ فقط در صورتی که فعال باشه ===== */}
-          {settings.showFaq !== false && (
-            <Link to="/faq" className={isActive("/faq")} onClick={closeMenu}>❓ سوالات متداول</Link>
-          )}
+          
 
           {user?.isAdmin && (
             <Link to="/admin" className={isActive("/admin")} onClick={closeMenu}>مدیریت</Link>

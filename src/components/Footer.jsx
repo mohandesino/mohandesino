@@ -72,11 +72,7 @@ function Footer() {
           <Link to="/courses">📚 دوره‌ها</Link>
           <Link to="/my-courses">📖 دوره‌های من</Link>
           <Link to="/about">ℹ️ درباره ما</Link>
-          <Link to="/contact">📞 تماس با ما</Link>
-          <Link to="/blog">📝 مجله</Link>
-          {settings.showFaq !== false && (
-            <Link to="/faq">❓ سوالات متداول</Link>
-          )}
+          
         </div>
 
         <div className="enamad-badge-pro" style={{ marginTop: "20px", textAlign: "center" }}>

@@ -14,7 +14,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Search from "./pages/Search";
 import About from "./pages/About";
-import Contact from "./pages/Contact";
 import Profile from "./pages/Profile";
 import AdminNew from "./pages/AdminNew";
 import Player from "./pages/Player";
@@ -22,9 +21,6 @@ import Player from "./pages/Player";
 import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Faq from "./pages/Faq";
 import Certificate from "./components/Certificate";
 
 function App() {
@@ -43,7 +39,6 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/search" element={<Search />} />
         <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminNew />} />
         <Route path="/player" element={<Player />} />
@@ -51,9 +46,6 @@ function App() {
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-failed" element={<PaymentFailed />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:id" element={<BlogPost />} />
-        <Route path="/faq" element={<Faq />} />
         <Route path="/certificate/:id" element={<Certificate />} />
       </Routes>
       <Footer />
