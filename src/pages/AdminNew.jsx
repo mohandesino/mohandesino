@@ -610,7 +610,9 @@ function AdminNew() {
       <main className="admin-new-main">
         <header className="admin-new-header">
           <div>
-            <h1>
+            <div style={{fontSize:"12px",color:"#888"}}>SECTION: {section}</div>
+
+          <h1>
               {section === "dashboard" && "داشبورد"}
               {section === "courses" && "مدیریت دوره‌ها"}
               {section === "users" && "کاربران"}
