@@ -91,7 +91,6 @@ function Header() {
           <Link to="/" className={isActive("/")} onClick={closeMenu}>خانه</Link>
           <Link to="/courses" className={isActive("/courses")} onClick={closeMenu}>دوره‌ها</Link>
           <Link to="/my-courses" className={isActive("/my-courses")} onClick={closeMenu}>دوره‌های من</Link>
-          <Link to="/about" className={isActive("/about")} onClick={closeMenu}>درباره ما</Link>
           
           {/* ===== جدید: نمایش FAQ فقط در صورتی که فعال باشه ===== */}
           

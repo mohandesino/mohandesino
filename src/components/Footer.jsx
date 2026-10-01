@@ -71,7 +71,6 @@ function Footer() {
           <Link to="/">🏠 خانه</Link>
           <Link to="/courses">📚 دوره‌ها</Link>
           <Link to="/my-courses">📖 دوره‌های من</Link>
-          <Link to="/about">ℹ️ درباره ما</Link>
           
         </div>
 

@@ -13,7 +13,6 @@ import Learn from "./pages/Learn";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Search from "./pages/Search";
-import About from "./pages/About";
 import Profile from "./pages/Profile";
 import AdminNew from "./pages/AdminNew";
 import Player from "./pages/Player";
@@ -38,7 +37,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/about" element={<About />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminNew />} />
         <Route path="/player" element={<Player />} />
